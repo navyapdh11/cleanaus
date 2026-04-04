@@ -1,0 +1,667 @@
+openapi: 3.1.0
+info:
+  title: CleanAUS Enterprise API
+  description: |
+    Enterprise-grade cleaning services platform for Australia.
+    Supports residential, commercial, and strata cleaning services across all Australian regions.
+  version: 1.0.0
+  contact:
+    name: CleanAUS API Support
+    email: api@cleanaus.com.au
+    url: https://api.cleanaus.com.au
+  license:
+    name: Proprietary
+    url: https://cleanaus.com.au/license
+
+servers:
+  - url: https://api.cleanaus.com.au/v1
+    description: Production
+  - url: https://staging-api.cleanaus.com.au/v1
+    description: Staging
+  - url: http://localhost:3001/v1
+    description: Local Development
+
+tags:
+  - name: Regions
+    description: Australian regions and service areas
+  - name: Services
+    description: Cleaning service types and configurations
+  - name: Bookings
+    description: Service booking management
+  - name: Pricing
+    description: Dynamic pricing engine
+  - name: Customers
+    description: Customer management
+  - name: Staff
+    description: Staff and cleaner management
+  - name: Dispatch
+    description: AI-powered dispatch system
+  - name: Payments
+    description: Payment processing with Stripe
+  - name: Notifications
+    description: Notification system
+
+paths:
+  /regions:
+    get:
+      summary: List all Australian service regions
+      tags: [Regions]
+      operationId: listRegions
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegionListResponse'
+    
+  /regions/{regionCode}/service-areas:
+    get:
+      summary: Get service areas for a specific region
+      tags: [Regions]
+      operationId: getRegionServiceAreas
+      parameters:
+        - name: regionCode
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/RegionCode'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceAreaListResponse'
+
+  /services:
+    get:
+      summary: List available cleaning services
+      tags: [Services]
+      operationId: listServices
+      parameters:
+        - name: serviceType
+          in: query
+          schema:
+            $ref: '#/components/schemas/ServiceType'
+        - name: regionCode
+          in: query
+          schema:
+            $ref: '#/components/schemas/RegionCode'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceListResponse'
+    post:
+      summary: Create a new service (admin)
+      tags: [Services]
+      operationId: createService
+      security:
+        - BearerAuth: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateServiceRequest'
+      responses:
+        '201':
+          description: Service created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+
+  /bookings:
+    get:
+      summary: List bookings
+      tags: [Bookings]
+      operationId: listBookings
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/BookingStatus'
+        - name: regionCode
+          in: query
+          schema:
+            $ref: '#/components/schemas/RegionCode'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingListResponse'
+    post:
+      summary: Create a new booking
+      tags: [Bookings]
+      operationId: createBooking
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingRequest'
+      responses:
+        '201':
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+
+  /bookings/{bookingId}:
+    get:
+      summary: Get booking details
+      tags: [Bookings]
+      operationId: getBooking
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+
+  /pricing/calculate:
+    post:
+      summary: Calculate service pricing
+      tags: [Pricing]
+      operationId: calculatePricing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PricingCalculationRequest'
+      responses:
+        '200':
+          description: Pricing calculation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PricingCalculationResponse'
+
+  /dispatch/assign:
+    post:
+      summary: AI-powered staff assignment
+      tags: [Dispatch]
+      operationId: assignStaff
+      security:
+        - BearerAuth: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DispatchRequest'
+      responses:
+        '200':
+          description: Staff assigned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DispatchResponse'
+
+  /payments/create-intent:
+    post:
+      summary: Create Stripe payment intent
+      tags: [Payments]
+      operationId: createPaymentIntent
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentIntentRequest'
+      responses:
+        '200':
+          description: Payment intent created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentIntentResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    RegionCode:
+      type: string
+      enum: [NSW, VIC, QLD, WA, SA, TAS, ACT, NT]
+      description: Australian state/territory codes
+    
+    Region:
+      type: object
+      required: [code, name, timezone]
+      properties:
+        code:
+          $ref: '#/components/schemas/RegionCode'
+        name:
+          type: string
+          example: "New South Wales"
+        timezone:
+          type: string
+          example: "Australia/Sydney"
+        gstRate:
+          type: number
+          format: float
+          example: 0.10
+          description: GST rate for this region
+
+    RegionListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Region'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    ServiceArea:
+      type: object
+      required: [id, name, postcode, regionCode]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Sydney CBD"
+        postcode:
+          type: string
+          example: "2000"
+        regionCode:
+          $ref: '#/components/schemas/RegionCode'
+        serviceRadius:
+          type: number
+          format: float
+          description: Service radius in kilometers
+
+    ServiceAreaListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceArea'
+
+    ServiceType:
+      type: string
+      enum: [RESIDENTIAL, COMMERCIAL, STRATA, END_OF_LEASE, DEEP_CLEAN, CARPET_CLEANING, WINDOW_CLEANING]
+
+    Service:
+      type: object
+      required: [id, name, type, regionCode, basePrice]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Standard House Clean"
+        type:
+          $ref: '#/components/schemas/ServiceType'
+        description:
+          type: string
+        regionCode:
+          $ref: '#/components/schemas/RegionCode'
+        basePrice:
+          type: number
+          format: float
+          description: Base price in AUD
+        duration:
+          type: integer
+          description: Estimated duration in minutes
+        isActive:
+          type: boolean
+          default: true
+
+    ServiceListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Service'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    CreateServiceRequest:
+      type: object
+      required: [name, type, regionCode, basePrice, duration]
+      properties:
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/ServiceType'
+        description:
+          type: string
+        regionCode:
+          $ref: '#/components/schemas/RegionCode'
+        basePrice:
+          type: number
+          format: float
+        duration:
+          type: integer
+
+    BookingStatus:
+      type: string
+      enum: [PENDING, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED, NO_SHOW]
+
+    Booking:
+      type: object
+      required: [id, customerId, serviceId, regionCode, scheduledAt, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        customerId:
+          type: string
+          format: uuid
+        serviceId:
+          type: string
+          format: uuid
+        assignedStaffId:
+          type: string
+          format: uuid
+          nullable: true
+        regionCode:
+          $ref: '#/components/schemas/RegionCode'
+        scheduledAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          $ref: '#/components/schemas/BookingStatus'
+        address:
+          $ref: '#/components/schemas/Address'
+        totalPrice:
+          type: number
+          format: float
+        gstAmount:
+          type: number
+          format: float
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    BookingListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Booking'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    Address:
+      type: object
+      required: [street, suburb, postcode, state]
+      properties:
+        street:
+          type: string
+        suburb:
+          type: string
+        postcode:
+          type: string
+          pattern: '^\d{4}$'
+        state:
+          $ref: '#/components/schemas/RegionCode'
+        country:
+          type: string
+          default: AU
+        instructions:
+          type: string
+          nullable: true
+
+    CreateBookingRequest:
+      type: object
+      required: [serviceId, regionCode, scheduledAt, address]
+      properties:
+        serviceId:
+          type: string
+          format: uuid
+        regionCode:
+          $ref: '#/components/schemas/RegionCode'
+        scheduledAt:
+          type: string
+          format: date-time
+        address:
+          $ref: '#/components/schemas/Address'
+        notes:
+          type: string
+        recurringSchedule:
+          $ref: '#/components/schemas/RecurringSchedule'
+
+    RecurringSchedule:
+      type: object
+      properties:
+        frequency:
+          type: string
+          enum: [WEEKLY, BIWEEKLY, MONTHLY, QUARTERLY]
+        endDate:
+          type: string
+          format: date
+        occurrences:
+          type: integer
+
+    PricingCalculationRequest:
+      type: object
+      required: [serviceId, regionCode, address]
+      properties:
+        serviceId:
+          type: string
+          format: uuid
+        regionCode:
+          $ref: '#/components/schemas/RegionCode'
+        address:
+          $ref: '#/components/schemas/Address'
+        propertySize:
+          type: string
+          enum: [SMALL, MEDIUM, LARGE, XLARGE]
+        bedrooms:
+          type: integer
+        bathrooms:
+          type: integer
+        addons:
+          type: array
+          items:
+            type: string
+            enum: [OVEN_CLEAN, FRIDGE_CLEAN, LAUNDRY, GARAGE, BALCONY]
+
+    PricingCalculationResponse:
+      type: object
+      properties:
+        basePrice:
+          type: number
+          format: float
+        propertySizeAdjustment:
+          type: number
+          format: float
+        addonTotal:
+          type: number
+          format: float
+        subtotal:
+          type: number
+          format: float
+        gstAmount:
+          type: number
+          format: float
+        total:
+          type: number
+          format: float
+        currency:
+          type: string
+          default: AUD
+        breakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/PricingLineItem'
+
+    PricingLineItem:
+      type: object
+      properties:
+        description:
+          type: string
+        amount:
+          type: number
+          format: float
+
+    DispatchRequest:
+      type: object
+      required: [bookingId, regionCode, scheduledAt]
+      properties:
+        bookingId:
+          type: string
+          format: uuid
+        regionCode:
+          $ref: '#/components/schemas/RegionCode'
+        scheduledAt:
+          type: string
+          format: date-time
+        requiredSkills:
+          type: array
+          items:
+            type: string
+        maxDistance:
+          type: number
+          format: float
+          description: Maximum distance in km
+
+    DispatchResponse:
+      type: object
+      properties:
+        assignedStaffId:
+          type: string
+          format: uuid
+        staffName:
+          type: string
+        distance:
+          type: number
+          format: float
+        estimatedArrival:
+          type: string
+          format: date-time
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        alternatives:
+          type: array
+          items:
+            $ref: '#/components/schemas/StaffAlternative'
+
+    StaffAlternative:
+      type: object
+      properties:
+        staffId:
+          type: string
+          format: uuid
+        staffName:
+          type: string
+        distance:
+          type: number
+          format: float
+        rating:
+          type: number
+          format: float
+
+    PaymentIntentRequest:
+      type: object
+      required: [bookingId, amount]
+      properties:
+        bookingId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: float
+          description: Amount in cents AUD
+        paymentMethod:
+          type: string
+          enum: [card, bank_transfer, direct_debit]
+        saveCard:
+          type: boolean
+          default: false
+
+    PaymentIntentResponse:
+      type: object
+      required: [clientSecret, paymentIntentId, amount, currency]
+      properties:
+        clientSecret:
+          type: string
+          description: Stripe client secret for payment confirmation
+        paymentIntentId:
+          type: string
+          description: Stripe payment intent ID
+        amount:
+          type: integer
+          description: Amount in cents AUD
+        currency:
+          type: string
+          default: aud
+          description: Currency code (AUD)
+
+    PaginationMeta:
+      type: object
+      required: [page, limit, total, totalPages, hasNext, hasPrevious]
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          description: Current page number
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: Items per page
+        total:
+          type: integer
+          minimum: 0
+          description: Total number of items
+        totalPages:
+          type: integer
+          minimum: 0
+          description: Total number of pages
+        hasNext:
+          type: boolean
+          description: Whether there is a next page
+        hasPrevious:
+          type: boolean
+          description: Whether there is a previous page

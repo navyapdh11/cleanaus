@@ -1,0 +1,26 @@
+{
+  "name": "cleanaus-enterprise-platform",
+  "version": "1.0.0",
+  "description": "Enterprise-grade cleaning services platform for Australia",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "services/*"
+  ],
+  "scripts": {
+    "dev": "pnpm --recursive --parallel dev",
+    "build": "pnpm --recursive build",
+    "lint": "pnpm --recursive lint",
+    "test": "pnpm --recursive test",
+    "test:e2e": "pnpm --recursive test:e2e",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "k8s:deploy": "kubectl apply -f k8s/"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0"
+}

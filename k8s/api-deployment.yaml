@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cleanaus-api
+  namespace: cleanaus
+  labels:
+    app: cleanaus-api
+    version: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: cleanaus-api
+  template:
+    metadata:
+      labels:
+        app: cleanaus-api
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "3001"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: api
+          image: cleanaus/api:latest
+          ports:
+            - containerPort: 3001
+              name: http
+              protocol: TCP
+          envFrom:
+            - secretRef:
+                name: cleanaus-api-secrets
+            - configMapRef:
+                name: cleanaus-api-config
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 3001
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 3001
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - cleanaus-api
+                topologyKey: kubernetes.io/hostname
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cleanaus-api
+  namespace: cleanaus
+spec:
+  selector:
+    app: cleanaus-api
+  ports:
+    - port: 80
+      targetPort: 3001
+      protocol: TCP
+      name: http
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cleanaus-api
+  namespace: cleanaus
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - api.cleanaus.com.au
+      secretName: cleanaus-api-tls
+  rules:
+    - host: api.cleanaus.com.au
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: cleanaus-api
+                port:
+                  number: 80
