@@ -1,11 +1,9 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { RegionsController } from './regions.controller';
 import { RegionsService } from './regions.service';
-import { RegionEntity } from './entities/region.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([RegionEntity])],
+  // TypeORM disabled for demo mode
   controllers: [RegionsController],
   providers: [RegionsService],
   exports: [RegionsService],

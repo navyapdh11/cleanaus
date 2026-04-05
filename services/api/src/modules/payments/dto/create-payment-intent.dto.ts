@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsUUID, IsNumber, IsBoolean, IsOptional, Min } from 'class-validator';
+import { IsUUID, IsNumber, IsBoolean, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreatePaymentIntentRequest {
   @ApiProperty({ description: 'Booking ID' })
@@ -8,11 +8,12 @@ export class CreatePaymentIntentRequest {
 
   @ApiProperty({ description: 'Amount in AUD' })
   @IsNumber()
-  @Min(0)
+  @Min(1) // Minimum $0.01
   amount: number;
 
   @ApiProperty({ description: 'Payment method', enum: ['card', 'bank_transfer', 'direct_debit'], required: false })
   @IsOptional()
+  @IsString()
   paymentMethod?: string;
 
   @ApiProperty({ description: 'Save card for future payments', default: false })

@@ -16,8 +16,13 @@ export class StripeService {
     private configService: ConfigService,
     private otel: OpenTelemetryService,
   ) {
-    this.stripe = new Stripe(configService.get('STRIPE_SECRET_KEY'), {
-      apiVersion: '2024-12-18.acacia',
+    const key = configService.get<string>('STRIPE_SECRET_KEY');
+    if (!key) {
+      throw new Error('STRIPE_SECRET_KEY environment variable is required');
+    }
+    
+    this.stripe = new Stripe(key, {
+      apiVersion: '2023-10-16',
       typescript: true,
     });
   }
@@ -31,7 +36,7 @@ export class StripeService {
     bookingId: string;
     customerId: string;
     email: string;
-    paymentMethod?: Stripe.PaymentMethodType;
+    paymentMethod?: string;
     saveCard?: boolean;
   }): Promise<Stripe.PaymentIntent> {
     return this.otel.trace('stripe.create-payment-intent', async (span) => {
@@ -98,7 +103,10 @@ export class StripeService {
    * Create Stripe webhook handler
    */
   async handleWebhook(payload: Buffer, signature: string): Promise<Stripe.Event> {
-    const webhookSecret = this.configService.get('STRIPE_WEBHOOK_SECRET');
+    const webhookSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET');
+    if (!webhookSecret) {
+      throw new Error('STRIPE_WEBHOOK_SECRET environment variable is required');
+    }
     
     return this.stripe.webhooks.constructEvent(payload, signature, webhookSecret);
   }
@@ -132,11 +140,11 @@ export class StripeService {
     gstAmount: number;
     currency: string;
     status: string;
-    receiptUrl: string;
+    receiptUrl?: string;
   }> {
     const paymentIntent = await this.stripe.paymentIntents.retrieve(paymentIntentId);
     
-    const amount = paymentIntent.amount_received;
+    const amount = paymentIntent.amount_received || 0;
     const gstAmount = Math.round(amount * 0.1);
     const amountExGst = amount - gstAmount;
 
@@ -146,9 +154,9 @@ export class StripeService {
       gstAmount,
       currency: 'AUD',
       status: paymentIntent.status,
-      receiptUrl: paymentIntent.latest_receipt
-        ? `https://pay.stripe.com/receipts/${paymentIntent.latest_receipt}`
-        : null,
+      receiptUrl: (paymentIntent as any).latest_receipt
+        ? `https://pay.stripe.com/receipts/${(paymentIntent as any).latest_receipt}`
+        : undefined,
     };
   }
 }

@@ -146,8 +146,9 @@ export class PricingAgent extends BaseAgent {
     let adjustment = 0;
 
     // Property size adjustment
-    const sizeMultipliers = { SMALL: 0, MEDIUM: 0.1, LARGE: 0.25, XLARGE: 0.4 };
-    adjustment += basePrice * (sizeMultipliers[propertyDetails.size] || 0);
+    const sizeMultipliers: Record<string, number> = { SMALL: 0, MEDIUM: 0.1, LARGE: 0.25, XLARGE: 0.4 };
+    const size = propertyDetails.size as keyof typeof sizeMultipliers;
+    adjustment += basePrice * (sizeMultipliers[size] || 0);
 
     // Additional rooms
     adjustment += (propertyDetails.bedrooms || 0) * 15;
@@ -286,7 +287,7 @@ export class SupportAgent extends BaseAgent {
   }
 
   private generateResponse(classification: string, inquiry: string): string {
-    const responses = {
+    const responses: Record<string, string> = {
       BOOKING_INQUIRY: 'I can help you with your booking. Let me check availability...',
       PRICING_INQUIRY: 'Our pricing is transparent with GST included. Let me calculate...',
       CANCELLATION: 'I understand you need to cancel. Let me check our cancellation policy...',

@@ -2,6 +2,7 @@ import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { RegionsService } from './regions.service';
 import { RegionCode } from '../../common/types/region.types';
+import { REGION_CODES } from '../../config/region-constants';
 
 @ApiTags('Regions')
 @Controller('regions')
@@ -17,7 +18,7 @@ export class RegionsController {
 
   @Get(':code')
   @ApiOperation({ summary: 'Get region by code' })
-  @ApiParam({ name: 'code', enum: RegionCode })
+  @ApiParam({ name: 'code', enum: REGION_CODES })
   @ApiResponse({ status: 200, description: 'Returns region details' })
   @ApiResponse({ status: 404, description: 'Region not found' })
   async findOne(@Param('code') code: RegionCode) {
@@ -26,7 +27,7 @@ export class RegionsController {
 
   @Get(':code/service-areas')
   @ApiOperation({ summary: 'Get service areas for a region' })
-  @ApiParam({ name: 'code', enum: RegionCode })
+  @ApiParam({ name: 'code', enum: REGION_CODES })
   @ApiResponse({ status: 200, description: 'Returns service areas' })
   async getServiceAreas(
     @Param('code') code: RegionCode,

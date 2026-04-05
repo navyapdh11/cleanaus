@@ -1,14 +1,13 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
 import { StripeService } from './stripe.service';
-import { PaymentEntity } from './entities/payment.entity';
+import { OpenTelemetryService } from '../../common/services/opentelemetry.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PaymentEntity])],
+  // TypeORM disabled for demo mode
   controllers: [PaymentsController],
-  providers: [PaymentsService, StripeService],
+  providers: [PaymentsService, StripeService, OpenTelemetryService],
   exports: [PaymentsService, StripeService],
 })
 export class PaymentsModule {}

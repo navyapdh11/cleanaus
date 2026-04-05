@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Home, Building2, ClipboardList, Key, Droplets, Window } from 'lucide-react';
+import { Home, Building2, ClipboardList, Key, Droplets, Square } from 'lucide-react';
 
 const services = [
   {
@@ -38,7 +38,7 @@ const services = [
     price: 'From $300',
   },
   {
-    icon: Window,
+    icon: Square,
     title: 'Window Cleaning',
     description: 'Interior and exterior window cleaning for homes and businesses.',
     href: '/services/window',

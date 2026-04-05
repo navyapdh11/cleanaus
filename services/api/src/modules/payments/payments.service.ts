@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { StripeService } from './stripe.service';
@@ -7,13 +7,19 @@ import { CreatePaymentIntentRequest } from './dto/create-payment-intent.dto';
 
 @Injectable()
 export class PaymentsService {
+  private readonly logger = new Logger(PaymentsService.name);
+
   constructor(
-    @InjectRepository(PaymentEntity)
-    private paymentRepository: Repository<PaymentEntity>,
-    private stripeService: StripeService,
+    @Optional() @InjectRepository(PaymentEntity)
+    private paymentRepository?: Repository<PaymentEntity>,
+    private stripeService?: StripeService,
   ) {}
 
   async createPaymentIntent(dto: CreatePaymentIntentRequest, customerId: string, email: string) {
+    if (!this.stripeService) {
+      throw new Error('Stripe service is not available - check STRIPE_SECRET_KEY');
+    }
+
     const intent = await this.stripeService.createPaymentIntent({
       amount: Math.round(dto.amount * 100), // Convert to cents
       bookingId: dto.bookingId,
@@ -22,17 +28,20 @@ export class PaymentsService {
       saveCard: dto.saveCard,
     });
 
-    // Save payment record
-    const payment = this.paymentRepository.create({
-      bookingId: dto.bookingId,
-      customerId,
-      stripePaymentIntentId: intent.id,
-      amount: dto.amount,
-      currency: 'AUD',
-      status: 'pending',
-    });
+    const payment = this.paymentRepository
+      ? this.paymentRepository.create({
+          bookingId: dto.bookingId,
+          customerId,
+          stripePaymentIntentId: intent.id,
+          amount: dto.amount,
+          currency: 'AUD',
+          status: 'pending',
+        })
+      : null;
 
-    await this.paymentRepository.save(payment);
+    if (payment && this.paymentRepository) {
+      await this.paymentRepository.save(payment);
+    }
 
     return {
       clientSecret: intent.client_secret,
@@ -43,26 +52,30 @@ export class PaymentsService {
   }
 
   async handlePaymentSuccess(paymentIntentId: string) {
-    const payment = await this.paymentRepository.findOne({
-      where: { stripePaymentIntentId: paymentIntentId },
-    });
+    const payment = this.paymentRepository
+      ? await this.paymentRepository.findOne({ where: { stripePaymentIntentId: paymentIntentId } })
+      : null;
 
     if (payment) {
       payment.status = 'completed';
       payment.completedAt = new Date();
-      await this.paymentRepository.save(payment);
+      await this.paymentRepository!.save(payment);
+    } else {
+      this.logger.warn(`Payment not found for intent: ${paymentIntentId}`);
     }
   }
 
   async handlePaymentFailure(paymentIntentId: string, error: string) {
-    const payment = await this.paymentRepository.findOne({
-      where: { stripePaymentIntentId: paymentIntentId },
-    });
+    const payment = this.paymentRepository
+      ? await this.paymentRepository.findOne({ where: { stripePaymentIntentId: paymentIntentId } })
+      : null;
 
     if (payment) {
       payment.status = 'failed';
       payment.failureReason = error;
-      await this.paymentRepository.save(payment);
+      await this.paymentRepository!.save(payment);
+    } else {
+      this.logger.warn(`Failed payment not found for intent: ${paymentIntentId}, error: ${error}`);
     }
   }
 }

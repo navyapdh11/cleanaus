@@ -20,6 +20,9 @@ export function Header() {
           <Link href="/pricing" className="text-sm font-medium hover:text-primary transition-colors">
             Pricing
           </Link>
+          <Link href="/seo-dashboard" className="text-sm font-medium hover:text-primary transition-colors text-accent-600">
+            SEO Dashboard
+          </Link>
           <Link href="/about" className="text-sm font-medium hover:text-primary transition-colors">
             About
           </Link>

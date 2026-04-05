@@ -1,5 +1,15 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { RegionCode } from '../../../common/types/region.types';
+
+export enum RegionCodeEnum {
+  NSW = 'NSW',
+  VIC = 'VIC',
+  QLD = 'QLD',
+  WA = 'WA',
+  SA = 'SA',
+  TAS = 'TAS',
+  ACT = 'ACT',
+  NT = 'NT',
+}
 
 @Entity('regions')
 export class RegionEntity {
@@ -8,10 +18,10 @@ export class RegionEntity {
 
   @Column({
     type: 'enum',
-    enum: RegionCode,
+    enum: RegionCodeEnum,
     unique: true,
   })
-  code: RegionCode;
+  code: RegionCodeEnum;
 
   @Column({ length: 100 })
   name: string;

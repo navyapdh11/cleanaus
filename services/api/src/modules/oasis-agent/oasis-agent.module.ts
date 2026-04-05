@@ -2,14 +2,17 @@ import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ScheduleModule } from '@nestjs/schedule';
-import { TypeOrmModule } from '@nestjs/typeorm';
+// TypeORM disabled for demo mode
+import { OpenTelemetryService } from '../../common/services/opentelemetry.service';
 
 // OASIS Agents
-import { SchedulingAgent } from './agents/scheduling.agent';
-import { PricingAgent } from './agents/pricing.agent';
-import { DispatchAgent } from './agents/dispatch.agent';
-import { SupportAgent } from './agents/support.agent';
-import { QualityAgent } from './agents/quality.agent';
+import {
+  SchedulingAgent,
+  PricingAgent,
+  DispatchAgent,
+  SupportAgent,
+  QualityAgent,
+} from './agents';
 
 // Services
 import { OasisOrchestratorService } from './services/orchestrator.service';
@@ -21,29 +24,31 @@ import { AgentLogEntity } from './entities/agent-log.entity';
 import { DecisionEntity } from './entities/decision.entity';
 
 // Queues
-export enum OasisQueues {
-  SCHEDULING = 'oasis-scheduling',
-  PRICING = 'oasis-pricing',
-  DISPATCH = 'oasis-dispatch',
-  SUPPORT = 'oasis-support',
-  QUALITY = 'oasis-quality',
-  ORCHESTRATOR = 'oasis-orchestrator',
-}
+export const OasisQueues = {
+  SCHEDULING: 'oasis-scheduling',
+  PRICING: 'oasis-pricing',
+  DISPATCH: 'oasis-dispatch',
+  SUPPORT: 'oasis-support',
+  QUALITY: 'oasis-quality',
+  ORCHESTRATOR: 'oasis-orchestrator',
+} as const;
+
+export type OasisQueueNames = typeof OasisQueues[keyof typeof OasisQueues];
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([AgentLogEntity, DecisionEntity]),
+    // TypeORM disabled
     ScheduleModule.forRoot(),
     
-    // BullMQ queues for each agent
-    BullModule.registerQueue(
-      { name: OasisQueues.SCHEDULING },
-      { name: OasisQueues.PRICING },
-      { name: OasisQueues.DISPATCH },
-      { name: OasisQueues.SUPPORT },
-      { name: OasisQueues.QUALITY },
-      { name: OasisQueues.ORCHESTRATOR },
-    ),
+    // BullMQ queues disabled (Redis not available)
+    // BullModule.registerQueue(
+    //   { name: OasisQueues.SCHEDULING },
+    //   { name: OasisQueues.PRICING },
+    //   { name: OasisQueues.DISPATCH },
+    //   { name: OasisQueues.SUPPORT },
+    //   { name: OasisQueues.QUALITY },
+    //   { name: OasisQueues.ORCHESTRATOR },
+    // ),
 
     CacheModule.register(),
   ],
@@ -59,12 +64,12 @@ export enum OasisQueues {
     OasisOrchestratorService,
     AgentRegistryService,
     MessageBusService,
+    OpenTelemetryService,
   ],
   exports: [
     OasisOrchestratorService,
     AgentRegistryService,
     MessageBusService,
-    BullModule,
   ],
 })
 export class OasisAgentModule {}

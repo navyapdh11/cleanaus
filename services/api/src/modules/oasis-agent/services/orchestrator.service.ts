@@ -1,10 +1,19 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit, Optional } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { OpenTelemetryService } from '../../common/services/opentelemetry.service';
-import { OasisQueues } from './oasis-agent.module';
-import { AgentRegistryService } from './services/agent-registry.service';
+import { OpenTelemetryService } from '../../../common/services/opentelemetry.service';
+import { AgentRegistryService } from './agent-registry.service';
+
+// Import queues directly to avoid circular dependency
+export const OasisQueues = {
+  SCHEDULING: 'oasis-scheduling',
+  PRICING: 'oasis-pricing',
+  DISPATCH: 'oasis-dispatch',
+  SUPPORT: 'oasis-support',
+  QUALITY: 'oasis-quality',
+  ORCHESTRATOR: 'oasis-orchestrator',
+} as const;
 
 export interface OasisTask {
   id: string;
@@ -50,10 +59,10 @@ export class OasisOrchestratorService implements OnModuleInit {
   private agentDecisions = new Map<string, OasisDecision[]>();
 
   constructor(
-    @InjectQueue(OasisQueues.ORCHESTRATOR)
-    private orchestratorQueue: Queue,
-    private agentRegistry: AgentRegistryService,
-    private otel: OpenTelemetryService,
+    @Optional() @InjectQueue(OasisQueues.ORCHESTRATOR)
+    private readonly orchestratorQueue: Queue | undefined,
+    private readonly agentRegistry: AgentRegistryService,
+    private readonly otel: OpenTelemetryService,
   ) {}
 
   async onModuleInit() {
@@ -71,21 +80,26 @@ export class OasisOrchestratorService implements OnModuleInit {
    * Submit a task for agentic processing
    */
   async submitTask(task: OasisTask): Promise<string> {
-    return this.otel.trace('oasis.submit-task', async (span) => {
+    return this.otel.trace('oasis.submit-task', async (span): Promise<string> => {
       span.setAttribute('task.type', task.type);
       span.setAttribute('task.priority', task.priority);
 
-      const job = await this.orchestratorQueue.add('process-task', task, {
+      const job = this.orchestratorQueue ? await this.orchestratorQueue.add('process-task', task, {
         priority: this.getPriorityValue(task.priority),
         attempts: task.maxRetries || 3,
         backoff: {
           type: 'exponential',
           delay: 2000,
         },
-      });
+      }) : null;
 
-      span.setAttribute('task.jobId', job.id);
-      return job.id;
+      if (job) {
+        span.setAttribute('task.jobId', job.id);
+        return job.id as string;
+      }
+      
+      // Fallback: return task ID
+      return task.id;
     });
   }
 
@@ -279,7 +293,7 @@ export class OasisOrchestratorService implements OnModuleInit {
    * Get numeric priority value
    */
   private getPriorityValue(priority: string): number {
-    const values = { LOW: 10, MEDIUM: 5, HIGH: 2, CRITICAL: 1 };
+    const values: Record<string, number> = { LOW: 10, MEDIUM: 5, HIGH: 2, CRITICAL: 1 };
     return values[priority] || 5;
   }
 

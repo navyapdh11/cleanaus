@@ -6,6 +6,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { BullModule } from '@nestjs/bullmq';
 import { CacheModule } from '@nestjs/cache-manager';
 import { TerminusModule } from '@nestjs/terminus';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { redisStore } from 'cache-manager-redis-yet';
 
 // Core modules
@@ -38,23 +39,29 @@ import { AUSTRALIAN_REGIONS } from './config/australian-regions';
       envFilePath: ['.env.local', '.env'],
     }),
 
-    // Database
-    TypeOrmModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get('DB_HOST', 'localhost'),
-        port: configService.get('DB_PORT', 5432),
-        username: configService.get('DB_USERNAME', 'cleanaus'),
-        password: configService.get('DB_PASSWORD'),
-        database: configService.get('DB_NAME', 'cleanaus_prod'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        migrations: [__dirname + '/migrations/*{.ts,.js}'],
-        synchronize: configService.get('NODE_ENV') === 'development',
-        logging: configService.get('DB_LOGGING', false),
-        ssl: configService.get('DB_SSL', false),
-      }),
-    }),
+    // Rate limiting - 60 requests per minute per IP
+    ThrottlerModule.forRoot([{
+      ttl: 60000,
+      limit: 60,
+    }]),
+
+    // Database (disabled for demo mode - no PostgreSQL available)
+    // TypeOrmModule.forRootAsync({
+    //   inject: [ConfigService],
+    //   useFactory: (configService: ConfigService) => ({
+    //     type: 'postgres',
+    //     host: configService.get('DB_HOST', 'localhost'),
+    //     port: configService.get('DB_PORT', 5432),
+    //     username: configService.get('DB_USERNAME', 'cleanaus'),
+    //     password: configService.get('DB_PASSWORD'),
+    //     database: configService.get('DB_NAME', 'cleanaus_prod'),
+    //     entities: [__dirname + '/**/*.entity{.ts,.js}'],
+    //     migrations: [__dirname + '/migrations/*{.ts,.js}'],
+    //     synchronize: configService.get('NODE_ENV') === 'development',
+    //     logging: configService.get('DB_LOGGING', false),
+    //     ssl: configService.get('DB_SSL', false),
+    //   }),
+    // }),
 
     // Event emitter for domain events
     EventEmitterModule.forRoot({
@@ -69,43 +76,23 @@ import { AUSTRALIAN_REGIONS } from './config/australian-regions';
     // Scheduled tasks
     ScheduleModule.forRoot(),
 
-    // BullMQ for job queues (dispatch, notifications, etc.)
-    BullModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        connection: {
-          host: configService.get('REDIS_HOST', 'localhost'),
-          port: configService.get('REDIS_PORT', 6379),
-          password: configService.get('REDIS_PASSWORD'),
-        },
-        defaultJobOptions: {
-          attempts: 3,
-          backoff: {
-            type: 'exponential',
-            delay: 1000,
-          },
-          removeOnComplete: {
-            age: 3600,
-          },
-          removeOnFail: {
-            age: 7200,
-          },
-        },
-      }),
-    }),
+    // BullMQ for job queues (disabled - Redis not available)
+    // BullModule.forRootAsync({
+    //   inject: [ConfigService],
+    //   useFactory: (configService: ConfigService) => ({
+    //     connection: {
+    //       host: configService.get('REDIS_HOST', 'localhost'),
+    //       port: configService.get('REDIS_PORT', 6379),
+    //       password: configService.get('REDIS_PASSWORD'),
+    //     },
+    //   }),
+    // }),
 
-    // Cache
-    CacheModule.registerAsync({
+    // Cache (in-memory fallback)
+    CacheModule.register({
       isGlobal: true,
-      inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
-        store: await redisStore({
-          host: configService.get('REDIS_HOST', 'localhost'),
-          port: configService.get('REDIS_PORT', 6379),
-          password: configService.get('REDIS_PASSWORD'),
-          ttl: 3600,
-        }),
-      }),
+      ttl: 3600,
+      max: 100,
     }),
 
     // Health checks
