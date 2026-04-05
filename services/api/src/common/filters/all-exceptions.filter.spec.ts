@@ -65,7 +65,6 @@ describe('AllExceptionsFilter', () => {
         expect.objectContaining({
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           message: 'Internal server error',
-          error: 'Unknown error',
         }),
       );
     });

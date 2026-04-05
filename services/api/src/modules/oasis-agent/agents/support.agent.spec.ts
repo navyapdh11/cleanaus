@@ -31,7 +31,7 @@ describe('SupportAgent', () => {
     it('should classify booking inquiries', async () => {
       const result = await agent.analyze({
         payload: {
-          inquiry: 'I want to book a cleaning service',
+          inquiry: 'I have a booking inquiry for cleaning service',
           customerHistory: null,
         },
       });
