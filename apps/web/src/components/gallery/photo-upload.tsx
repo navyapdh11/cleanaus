@@ -40,6 +40,7 @@ export function PhotoUpload({
   const [uploads, setUploads] = useState<Map<string, UploadProgress>>(new Map());
   const [isDragging, setIsDragging] = useState(false);
   const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
+  const xhrRefsRef = useRef<Map<string, XMLHttpRequest>>(new Map());
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
@@ -47,8 +48,6 @@ export function PhotoUpload({
 
       for (const file of filesToUpload) {
         const fileId = `upload-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-        const abortController = new AbortController();
-        abortControllersRef.current.set(fileId, abortController);
 
         setUploads((prev) =>
           new Map(prev).set(fileId, {
@@ -67,6 +66,7 @@ export function PhotoUpload({
           formData.append('altText', file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' '));
 
           const xhr = new XMLHttpRequest();
+          xhrRefsRef.current.set(fileId, xhr);
 
           xhr.upload.addEventListener('progress', (event) => {
             if (event.lengthComputable) {
@@ -83,6 +83,7 @@ export function PhotoUpload({
           });
 
           xhr.addEventListener('load', () => {
+            xhrRefsRef.current.delete(fileId);
             if (xhr.status >= 200 && xhr.status < 300) {
               try {
                 const response = JSON.parse(xhr.responseText);
@@ -133,6 +134,7 @@ export function PhotoUpload({
           });
 
           xhr.addEventListener('error', () => {
+            xhrRefsRef.current.delete(fileId);
             setUploads((prev) => {
               const next = new Map(prev);
               const existing = next.get(fileId);
@@ -180,6 +182,11 @@ export function PhotoUpload({
     });
 
   const removeUpload = useCallback((fileId: string) => {
+    const xhr = xhrRefsRef.current.get(fileId);
+    if (xhr && xhr.readyState < 4) {
+      xhr.abort();
+    }
+    xhrRefsRef.current.delete(fileId);
     const controller = abortControllersRef.current.get(fileId);
     if (controller) {
       controller.abort();

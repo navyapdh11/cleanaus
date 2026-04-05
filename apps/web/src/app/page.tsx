@@ -22,18 +22,9 @@ import {
   ArrowRight,
   Sparkle,
   Award,
-  Users,
-  MapPin,
-  Phone,
-  Mail,
-  Heart,
-  Gem,
-  TrendingUp,
-  HeadphonesIcon,
   ChevronDown,
   ChevronUp,
   Quote,
-  ArrowUpRight,
   Check,
 } from 'lucide-react';
 
@@ -353,7 +344,7 @@ export default function HomePage() {
       </section>
 
       {/* ===== WHY CHOOSE US ===== */}
-      <section className="relative py-20 px-4">
+      <section id="about" className="relative py-20 px-4">
         <div className="max-w-[1280px] mx-auto">
           <AnimatedSection className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold">
@@ -511,23 +502,26 @@ export default function HomePage() {
             <GlassCard intensity="strong" className="p-8 md:p-12">
               <h3 className="text-2xl md:text-3xl font-bold mb-4">Stay in the Loop</h3>
               <p className="text-white/60 mb-6">Get cleaning tips, exclusive offers, and 10% off your first booking.</p>
-              <div className="flex gap-3">
+              <form onSubmit={(e) => { e.preventDefault(); }} className="flex gap-3">
+                <label htmlFor="newsletter-email" className="sr-only">Email address</label>
                 <input
+                  id="newsletter-email"
                   type="email"
                   placeholder="Enter your email"
+                  aria-label="Email address"
                   className="flex-1 rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/25"
                 />
-                <button className="rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 px-6 py-3 text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-blue-500/25">
+                <button type="submit" className="rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 px-6 py-3 text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-blue-500/25">
                   Subscribe
                 </button>
-              </div>
+              </form>
             </GlassCard>
           </AnimatedSection>
         </div>
       </section>
 
       {/* ===== FINAL CTA ===== */}
-      <section className="relative py-32 px-4">
+      <section id="contact" className="relative py-32 px-4">
         <div className="max-w-[800px] mx-auto text-center">
           <AnimatedSection direction="scale">
             <GlassCard intensity="strong" className="p-12 md:p-16">
@@ -565,6 +559,8 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
     <GlassCard className="!p-0 !hover:transform-none" hover={false}>
       <button
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        type="button"
         className="w-full flex items-center justify-between p-6 text-left"
       >
         <span className="font-medium pr-4">{question}</span>

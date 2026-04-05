@@ -8,7 +8,7 @@ const handler = (req: Request) =>
     req,
     router: seoRouter,
     createContext: () => ({
-      ip: req.headers.get('x-forwarded-for') || '127.0.0.1',
+      ip: (req.headers.get('x-forwarded-for') || '127.0.0.1').split(',')[0]?.trim(),
       headers: Object.fromEntries(req.headers.entries()),
     }),
   });

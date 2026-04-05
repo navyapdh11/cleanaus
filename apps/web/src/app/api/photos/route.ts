@@ -28,8 +28,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'File size must be less than 10MB' }, { status: 400 });
     }
 
+    // Sanitize filename - remove path traversal and special chars
+    const sanitizedName = file.name
+      .replace(/[^a-zA-Z0-9._-]/g, '-')
+      .replace(/\.{2,}/g, '.');
     const timestamp = Date.now();
-    const filename = `cleanaus-gallery-${timestamp}-${file.name.replace(/\s+/g, '-').toLowerCase()}`;
+    const filename = `cleanaus-gallery-${timestamp}-${sanitizedName.toLowerCase()}`;
     const path = category ? `gallery/${category}/${filename}` : `gallery/${filename}`;
 
     const blob = await put(path, file, {

@@ -97,7 +97,6 @@ a {
 
 .glass:hover {
   background: var(--color-surface-hover);
-  transform: translateY(-6px);
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2), 0 0 24px rgba(99, 102, 241, 0.15);
 }
 
@@ -143,23 +142,8 @@ a {
   transition: all var(--transition-base);
 }
 
-.bento-item::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(99, 102, 241, 0.15), transparent 60%);
-  opacity: 0;
-  transition: opacity var(--transition-base);
-  pointer-events: none;
-}
-
-.bento-item:hover::before {
-  opacity: 1;
-}
-
 .bento-item:hover {
   background: var(--color-surface-hover);
-  transform: perspective(1000px) rotateX(2deg) rotateY(-2deg) translateY(-4px);
   border-color: rgba(99, 102, 241, 0.3);
 }
 

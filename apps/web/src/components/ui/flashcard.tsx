@@ -58,6 +58,9 @@ export function Flashcard({
       onClick={handleInteraction}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleInteraction(); } }}
+      role="button"
+      tabIndex={0}
       whileHover={{ scale: isHovered ? 1.02 : 1 }}
       whileTap={{ scale: 0.98 }}
     >

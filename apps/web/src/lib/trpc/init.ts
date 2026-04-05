@@ -26,29 +26,39 @@ export const timingMiddleware = t.middleware(async ({ path, type, next }) => {
   return result;
 });
 
-// Rate limiting middleware
+// Rate limiting middleware with cleanup to prevent memory leaks
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+function cleanupStaleEntries() {
+  const now = Date.now();
+  for (const [key, val] of rateLimitMap) {
+    if (now > val.resetAt) rateLimitMap.delete(key);
+  }
+}
 
 export const rateLimitMiddleware = middleware(async ({ ctx, next, path }) => {
   const ip = (ctx as any)?.ip || 'unknown';
   const now = Date.now();
   const windowMs = 60 * 1000; // 1 minute
   const maxRequests = 30;
-  
+
+  // Periodic cleanup to prevent memory leaks
+  if (rateLimitMap.size > 5000) cleanupStaleEntries();
+
   const current = rateLimitMap.get(ip) || { count: 0, resetAt: now + windowMs };
-  
+
   if (now > current.resetAt) {
     current.count = 0;
     current.resetAt = now + windowMs;
   }
-  
+
   current.count++;
   rateLimitMap.set(ip, current);
-  
+
   if (current.count > maxRequests) {
     throw new Error(`Rate limit exceeded for ${path}. Try again in ${Math.ceil((current.resetAt - now) / 1000)}s`);
   }
-  
+
   return next();
 });
 

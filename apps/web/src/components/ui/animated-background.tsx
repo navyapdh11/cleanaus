@@ -127,6 +127,10 @@ export function AnimatedBackground({
     };
 
     const animate = () => {
+      if (document.hidden) {
+        animationId = requestAnimationFrame(animate);
+        return;
+      }
       time++;
 
       if (variant === 'mesh') renderMesh();

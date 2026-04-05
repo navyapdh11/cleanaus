@@ -27,7 +27,7 @@ export function SEOProvider({ children }: { children: React.ReactNode }) {
     trpc.createClient({
       links: [
         loggerLink({
-          enabled: () => process.env.NODE_ENV === 'development',
+          enabled: () => typeof process !== 'undefined' && process.env.NODE_ENV === 'development',
         }),
         httpBatchLink({
           url: '/api/trpc',
