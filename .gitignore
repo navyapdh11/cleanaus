@@ -45,3 +45,4 @@ k8s/*-secret.yaml
 # Misc
 .turbo
 .cache
+.vercel

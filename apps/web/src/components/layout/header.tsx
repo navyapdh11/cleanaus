@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Sparkles, Phone, Menu, X } from 'lucide-react';
+import { Sparkles, Phone, Menu, X, ImagePlus } from 'lucide-react';
 
 export function Header() {
   return (
@@ -19,6 +19,10 @@ export function Header() {
           </Link>
           <Link href="/pricing" className="text-sm font-medium hover:text-primary transition-colors">
             Pricing
+          </Link>
+          <Link href="/gallery" className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-1">
+            <ImagePlus className="h-3.5 w-3.5" />
+            Gallery
           </Link>
           <Link href="/seo-dashboard" className="text-sm font-medium hover:text-primary transition-colors text-accent-600">
             SEO Dashboard
