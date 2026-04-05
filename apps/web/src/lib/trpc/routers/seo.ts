@@ -1,15 +1,26 @@
 import { z } from 'zod';
-import { router, publicProcedure, protectedProcedure } from '../init';
+import { router, publicProcedure } from '../init';
 
-// Zod schemas for input validation
-const AhrefsApiKeySchema = z.string().min(10).max(128);
-const SEMrushApiKeySchema = z.string().min(10).max(128);
+// Zod schemas for input validation - API keys are server-side only
 const DomainSchema = z.string().regex(/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/);
+
+// Helper to get API keys from server environment
+function getAhrefsApiKey(): string {
+  const key = process.env.AHREFS_API_KEY;
+  if (!key) throw new Error('AHREFS_API_KEY is not configured on the server');
+  return key;
+}
+
+function getSEMrushApiKey(): string {
+  const key = process.env.SEMRUSH_API_KEY;
+  if (!key) throw new Error('SEMRUSH_API_KEY is not configured on the server');
+  return key;
+}
 
 // Ahrefs API integration
 const ahrefsClient = {
   baseUrl: 'https://apiv2.ahrefs.com',
-  
+
   async fetch(endpoint: string, params: Record<string, string>, apiKey: string) {
     const url = new URL(this.baseUrl);
     url.search = new URLSearchParams({
@@ -31,10 +42,6 @@ const ahrefsClient = {
     return this.fetch('ahrefs_rank', { target }, apiKey);
   },
 
-  async getBacklinks(target: string, apiKey: string) {
-    return this.fetch('backlinks', { target, mode: 'exact' }, apiKey);
-  },
-
   async getOrganicKeywords(target: string, apiKey: string) {
     return this.fetch('organic', { target, mode: 'domain' }, apiKey);
   },
@@ -47,7 +54,7 @@ const ahrefsClient = {
 // SEMrush API integration
 const semrushClient = {
   baseUrl: 'https://api.semrush.com',
-  
+
   async fetch(params: Record<string, string>, apiKey: string) {
     const url = new URL(this.baseUrl);
     url.search = new URLSearchParams({
@@ -60,7 +67,7 @@ const semrushClient = {
     if (!response.ok) {
       throw new Error(`SEMrush API error: ${response.status} ${response.statusText}`);
     }
-    
+
     const text = await response.text();
     try {
       return JSON.parse(text);
@@ -74,7 +81,7 @@ const semrushClient = {
     return this.fetch({
       type: 'domain_rank',
       domain,
-      database: 'au', // Australian database
+      database: 'au',
     }, apiKey);
   },
 
@@ -122,14 +129,12 @@ const ECOMMERCE_KEYWORDS = [
 export const seoRouter = router({
   // Ahrefs endpoints
   ahrefs: router({
-    overview: protectedProcedure
-      .input(z.object({
-        domain: DomainSchema,
-        apiKey: AhrefsApiKeySchema,
-      }))
+    overview: publicProcedure
+      .input(z.object({ domain: DomainSchema }))
       .query(async ({ input }) => {
         try {
-          const data = await ahrefsClient.getSiteOverview(input.domain, input.apiKey);
+          const apiKey = getAhrefsApiKey();
+          const data = await ahrefsClient.getSiteOverview(input.domain, apiKey);
           return {
             success: true,
             data: {
@@ -148,14 +153,12 @@ export const seoRouter = router({
         }
       }),
 
-    organicKeywords: protectedProcedure
-      .input(z.object({
-        domain: DomainSchema,
-        apiKey: AhrefsApiKeySchema,
-      }))
+    organicKeywords: publicProcedure
+      .input(z.object({ domain: DomainSchema }))
       .query(async ({ input }) => {
         try {
-          const data = await ahrefsClient.getOrganicKeywords(input.domain, input.apiKey);
+          const apiKey = getAhrefsApiKey();
+          const data = await ahrefsClient.getOrganicKeywords(input.domain, apiKey);
           return {
             success: true,
             data: data.organic?.map((k: any) => ({
@@ -173,14 +176,12 @@ export const seoRouter = router({
         }
       }),
 
-    siteAudit: protectedProcedure
-      .input(z.object({
-        domain: DomainSchema,
-        apiKey: AhrefsApiKeySchema,
-      }))
+    siteAudit: publicProcedure
+      .input(z.object({ domain: DomainSchema }))
       .query(async ({ input }) => {
         try {
-          const data = await ahrefsClient.getSiteAudit(input.domain, input.apiKey);
+          const apiKey = getAhrefsApiKey();
+          const data = await ahrefsClient.getSiteAudit(input.domain, apiKey);
           return {
             success: true,
             data: {
@@ -197,18 +198,15 @@ export const seoRouter = router({
         }
       }),
 
-    ecommerceAudit: protectedProcedure
-      .input(z.object({
-        domain: DomainSchema,
-        apiKey: AhrefsApiKeySchema,
-      }))
+    ecommerceAudit: publicProcedure
+      .input(z.object({ domain: DomainSchema }))
       .query(async ({ input }) => {
         try {
-          // Get organic keywords and filter for e-commerce relevance
-          const keywordsData = await ahrefsClient.getOrganicKeywords(input.domain, input.apiKey);
-          
+          const apiKey = getAhrefsApiKey();
+          const keywordsData = await ahrefsClient.getOrganicKeywords(input.domain, apiKey);
+
           const ecommerceKeywords = (keywordsData.organic || []).filter((k: any) =>
-            ECOMMERCE_KEYWORDS.some(keyword => 
+            ECOMMERCE_KEYWORDS.some(keyword =>
               k.keyword.toLowerCase().includes(keyword.toLowerCase())
             )
           );
@@ -221,7 +219,6 @@ export const seoRouter = router({
             difficulty: k.kd || 0,
           }));
 
-          // Calculate average position for tracked keywords
           const avgPosition = keywordPositions.length > 0
             ? keywordPositions.reduce((sum: number, k: any) => sum + k.position, 0) / keywordPositions.length
             : null;
@@ -253,14 +250,12 @@ export const seoRouter = router({
 
   // SEMrush endpoints
   semrush: router({
-    overview: protectedProcedure
-      .input(z.object({
-        domain: DomainSchema,
-        apiKey: SEMrushApiKeySchema,
-      }))
+    overview: publicProcedure
+      .input(z.object({ domain: DomainSchema }))
       .query(async ({ input }) => {
         try {
-          const data = await semrushClient.getDomainOverview(input.domain, input.apiKey);
+          const apiKey = getSEMrushApiKey();
+          const data = await semrushClient.getDomainOverview(input.domain, apiKey);
           return {
             success: true,
             data: {
@@ -278,14 +273,12 @@ export const seoRouter = router({
         }
       }),
 
-    organicKeywords: protectedProcedure
-      .input(z.object({
-        domain: DomainSchema,
-        apiKey: SEMrushApiKeySchema,
-      }))
+    organicKeywords: publicProcedure
+      .input(z.object({ domain: DomainSchema }))
       .query(async ({ input }) => {
         try {
-          const data = await semrushClient.getOrganicKeywords(input.domain, input.apiKey);
+          const apiKey = getSEMrushApiKey();
+          const data = await semrushClient.getOrganicKeywords(input.domain, apiKey);
           return {
             success: true,
             data: Array.isArray(data) ? data.map((k: any) => ({
@@ -303,14 +296,12 @@ export const seoRouter = router({
         }
       }),
 
-    siteAudit: protectedProcedure
-      .input(z.object({
-        domain: DomainSchema,
-        apiKey: SEMrushApiKeySchema,
-      }))
+    siteAudit: publicProcedure
+      .input(z.object({ domain: DomainSchema }))
       .query(async ({ input }) => {
         try {
-          const data = await semrushClient.getSiteAudit(input.domain, input.apiKey);
+          const apiKey = getSEMrushApiKey();
+          const data = await semrushClient.getSiteAudit(input.domain, apiKey);
           return {
             success: true,
             data: {
@@ -328,16 +319,14 @@ export const seoRouter = router({
         }
       }),
 
-    ecommerceAudit: protectedProcedure
-      .input(z.object({
-        domain: DomainSchema,
-        apiKey: SEMrushApiKeySchema,
-      }))
+    ecommerceAudit: publicProcedure
+      .input(z.object({ domain: DomainSchema }))
       .query(async ({ input }) => {
         try {
-          const keywordsData = await semrushClient.getOrganicKeywords(input.domain, input.apiKey);
+          const apiKey = getSEMrushApiKey();
+          const keywordsData = await semrushClient.getOrganicKeywords(input.domain, apiKey);
           const keywords = Array.isArray(keywordsData) ? keywordsData : [];
-          
+
           const ecommerceKeywords = keywords.filter((k: any) =>
             ECOMMERCE_KEYWORDS.some(keyword =>
               (k.Phrase || '').toLowerCase().includes(keyword.toLowerCase())

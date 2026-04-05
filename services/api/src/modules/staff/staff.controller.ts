@@ -23,7 +23,9 @@ import { StaffStatusEnum } from './entities/staff.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('Staff')
+@ApiBearerAuth()
 @Controller('staff')
+@UseGuards(JwtAuthGuard)
 export class StaffController {
   constructor(private readonly staffService: StaffService) {}
 
@@ -57,8 +59,6 @@ export class StaffController {
   }
 
   @Post()
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Create a new staff member (admin)' })
   @ApiResponse({ status: 201, description: 'Staff member created' })
   async create(@Body() dto: CreateStaffDto) {
@@ -66,8 +66,6 @@ export class StaffController {
   }
 
   @Patch(':id')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Update a staff member (admin)' })
   @ApiParam({ name: 'id', description: 'Staff UUID' })
   async update(@Param('id') id: string, @Body() dto: UpdateStaffDto) {
@@ -75,8 +73,6 @@ export class StaffController {
   }
 
   @Delete(':id')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Delete a staff member (admin)' })
   @ApiParam({ name: 'id', description: 'Staff UUID' })
   async remove(@Param('id') id: string) {

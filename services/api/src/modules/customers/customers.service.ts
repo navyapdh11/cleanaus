@@ -1,19 +1,21 @@
-import { Injectable, NotFoundException, Optional, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, Optional, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CustomerEntity, CustomerTierEnum, CustomerStatusEnum } from './entities/customer.entity';
 import { CreateCustomerDto, UpdateCustomerDto, AddLoyaltyPointsDto } from './dto/customer.dto';
 
 @Injectable()
-export class CustomersService {
+export class CustomersService implements OnModuleInit {
   private readonly logger = new Logger(CustomersService.name);
   private inMemoryCustomers: Map<string, CustomerEntity> = new Map();
 
   constructor(
     @Optional() @InjectRepository(CustomerEntity)
     private customerRepository?: Repository<CustomerEntity>,
-  ) {
-    this.seedDefaultCustomers();
+  ) {}
+
+  async onModuleInit() {
+    await this.seedDefaultCustomers();
   }
 
   private async seedDefaultCustomers() {

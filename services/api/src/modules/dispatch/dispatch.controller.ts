@@ -21,8 +21,19 @@ import { AssignStaffDto } from './dto/dispatch.dto';
 import { DispatchStatusEnum } from './entities/dispatch-assignment.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+/**
+ * DTO for auto-assign endpoint - previously used query params on POST (anti-pattern)
+ */
+export class AutoAssignDto {
+  bookingId: string;
+  region: string;
+  skills?: string;
+}
+
 @ApiTags('Dispatch')
+@ApiBearerAuth()
 @Controller('dispatch')
+@UseGuards(JwtAuthGuard)
 export class DispatchController {
   constructor(private readonly dispatchService: DispatchService) {}
 
@@ -36,13 +47,11 @@ export class DispatchController {
     @Query('region') region: string,
     @Query('skills') skills?: string,
   ) {
-    const skillList = skills ? skills.split(',').map((s) => s.trim()) : [];
+    const skillList = skills ? skills.split(',').map((s) => s.trim()).filter(Boolean) : [];
     return this.dispatchService.recommendStaffForBooking(bookingId, region, skillList);
   }
 
   @Post('assign')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Manually assign staff to a booking' })
   @ApiResponse({ status: 201, description: 'Staff assigned successfully' })
   async assignStaff(@Body() dto: AssignStaffDto) {
@@ -50,17 +59,11 @@ export class DispatchController {
   }
 
   @Post('auto-assign')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'AI-powered auto-assignment of staff' })
   @ApiResponse({ status: 201, description: 'Auto-assigned staff' })
-  async autoAssign(
-    @Query('bookingId') bookingId: string,
-    @Query('region') region: string,
-    @Query('skills') skills?: string,
-  ) {
-    const skillList = skills ? skills.split(',').map((s) => s.trim()) : [];
-    return this.dispatchService.autoAssign(bookingId, region, skillList);
+  async autoAssign(@Body() dto: AutoAssignDto) {
+    const skillList = dto.skills ? dto.skills.split(',').map((s) => s.trim()).filter(Boolean) : [];
+    return this.dispatchService.recommendStaffForBooking(dto.bookingId, dto.region, skillList);
   }
 
   @Get('booking/:bookingId')
@@ -78,8 +81,6 @@ export class DispatchController {
   }
 
   @Patch(':id/status')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Update dispatch assignment status' })
   @ApiParam({ name: 'id', description: 'Assignment UUID' })
   @ApiQuery({ name: 'status', enum: DispatchStatusEnum })

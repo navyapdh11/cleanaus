@@ -1,4 +1,4 @@
-import { IsString, IsEnum, IsNumber, IsOptional, IsBoolean, IsObject, Min } from 'class-validator';
+import { IsString, IsEmail, IsEnum, IsNumber, IsOptional, IsBoolean, IsObject, Min } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { CustomerTierEnum, CustomerStatusEnum } from '../entities/customer.entity';
 
@@ -12,7 +12,7 @@ export class CreateCustomerDto {
   lastName: string;
 
   @ApiProperty({ example: 'john.doe@example.com' })
-  @IsString()
+  @IsEmail()
   email: string;
 
   @ApiPropertyOptional({ example: '+61412345678' })

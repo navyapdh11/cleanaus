@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { put, del } from '@vercel/blob';
+import { put } from '@vercel/blob';
 
 export const config = {
   api: {
@@ -54,27 +54,5 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Photo upload failed:', error);
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
-  }
-}
-
-export async function DELETE(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const url = searchParams.get('url');
-
-    if (!url) {
-      return NextResponse.json({ error: 'Photo URL required' }, { status: 400 });
-    }
-
-    try {
-      await del(url);
-    } catch (blobError) {
-      console.warn('Blob deletion failed (may be external URL):', blobError);
-    }
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Photo delete failed:', error);
-    return NextResponse.json({ error: 'Delete failed' }, { status: 500 });
   }
 }

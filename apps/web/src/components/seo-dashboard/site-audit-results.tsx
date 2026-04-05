@@ -7,19 +7,17 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface SiteAuditResultsProps {
   domain: string;
-  ahrefsKey: string;
-  semrushKey: string;
 }
 
-export function SiteAuditResults({ domain, ahrefsKey, semrushKey }: SiteAuditResultsProps) {
+export function SiteAuditResults({ domain }: SiteAuditResultsProps) {
   const ahrefsAudit = trpc.ahrefs.siteAudit.useQuery(
-    { domain, apiKey: ahrefsKey },
-    { enabled: !!ahrefsKey }
+    { domain },
+    { retry: 1 }
   );
 
   const semrushAudit = trpc.semrush.siteAudit.useQuery(
-    { domain, apiKey: semrushKey },
-    { enabled: !!semrushKey }
+    { domain },
+    { retry: 1 }
   );
 
   if (ahrefsAudit.isLoading || semrushAudit.isLoading) {

@@ -1,19 +1,21 @@
-import { Injectable, NotFoundException, Optional, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, Optional, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { StaffEntity, StaffStatusEnum, StaffRoleEnum } from './entities/staff.entity';
 import { CreateStaffDto, UpdateStaffDto } from './dto/staff.dto';
 
 @Injectable()
-export class StaffService {
+export class StaffService implements OnModuleInit {
   private readonly logger = new Logger(StaffService.name);
   private inMemoryStaff: Map<string, StaffEntity> = new Map();
 
   constructor(
     @Optional() @InjectRepository(StaffEntity)
     private staffRepository?: Repository<StaffEntity>,
-  ) {
-    this.seedDefaultStaff();
+  ) {}
+
+  async onModuleInit() {
+    await this.seedDefaultStaff();
   }
 
   private async seedDefaultStaff() {

@@ -1,20 +1,21 @@
-import { Injectable, NotFoundException, Optional, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, Optional, Logger, OnModuleInit } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ServiceEntity, ServiceCategoryEnum, ServiceTypeEnum } from './entities/service.entity';
 import { CreateServiceDto, UpdateServiceDto } from './dto/service.dto';
 
 @Injectable()
-export class ServicesService {
+export class ServicesService implements OnModuleInit {
   private readonly logger = new Logger(ServicesService.name);
   private inMemoryServices: Map<string, ServiceEntity> = new Map();
 
   constructor(
     @Optional() @InjectRepository(ServiceEntity)
     private serviceRepository?: Repository<ServiceEntity>,
-  ) {
-    // Seed default cleaning service catalog in demo mode
-    this.seedDefaultServices();
+  ) {}
+
+  async onModuleInit() {
+    await this.seedDefaultServices();
   }
 
   private async seedDefaultServices() {

@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { trace, context, propagation } from '@opentelemetry/api';
+import { trace, context, propagation, SpanStatusCode } from '@opentelemetry/api';
 
 @Injectable()
 export class OpenTelemetryService implements OnModuleInit {
@@ -46,11 +46,11 @@ export class OpenTelemetryService implements OnModuleInit {
     
     try {
       const result = await fn(span);
-      span.setStatus({ code: 1 }); // OK
+      span.setStatus({ code: SpanStatusCode.OK });
       return result;
     } catch (error) {
-      span.setStatus({ code: 2, message: error.message }); // ERROR
-      span.recordException(error);
+      span.setStatus({ code: SpanStatusCode.ERROR, message: error instanceof Error ? error.message : String(error) });
+      span.recordException(error instanceof Error ? error : new Error(String(error)));
       throw error;
     } finally {
       span.end();

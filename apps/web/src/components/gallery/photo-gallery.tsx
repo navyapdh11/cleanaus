@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { LazyImage } from './lazy-image';
 import { cn, formatFileSize, formatDate } from '@/lib/utils';
 import {
@@ -131,16 +131,16 @@ export function PhotoGallery({
   );
 
   // Keyboard navigation for lightbox
-  useState(() => {
+  useEffect(() => {
+    if (lightboxIndex === null) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (lightboxIndex === null) return;
       if (e.key === 'Escape') closeLightbox();
       if (e.key === 'ArrowLeft') navigateLightbox(-1);
       if (e.key === 'ArrowRight') navigateLightbox(1);
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  });
+  }, [lightboxIndex, closeLightbox, navigateLightbox]);
 
   if (isLoading) {
     return (
@@ -361,6 +361,7 @@ export function PhotoGallery({
           onClick={closeLightbox}
           role="dialog"
           aria-modal="true"
+          aria-label="Image lightbox"
         >
           {/* Close button */}
           <button

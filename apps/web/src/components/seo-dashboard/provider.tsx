@@ -6,14 +6,17 @@ import { useState } from 'react';
 import { trpc } from '@/lib/trpc/client';
 import SuperJSON from 'superjson';
 
+// NOTE: This component provides both tRPC and QueryClient contexts.
+// The root Providers component may also provide a QueryClient, but having
+// a separate one here is intentional to keep the SEO dashboard isolated.
 export function SEOProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 5 * 60 * 1000, // 5 minutes
-            retry: 2,
+            staleTime: 5 * 60 * 1000,
+            retry: 1,
             refetchOnWindowFocus: false,
           },
         },

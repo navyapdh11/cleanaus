@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { ReactNode } from 'react';
@@ -117,4 +118,3 @@ export function ParallaxText({ children, className, speed = 0.5 }: ParallaxTextP
   );
 }
 
-import { useRef } from 'react';

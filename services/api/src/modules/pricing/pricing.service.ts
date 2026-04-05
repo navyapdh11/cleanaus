@@ -1,8 +1,8 @@
 import { Injectable, Optional, Logger, BadRequestException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PricingRuleEntity } from './entities/pricing-rule.entity';
-import { PricingContextDto, PriceBreakdownDto } from './dto/pricing.dto';
+import { PricingRuleEntity, PricingRuleTypeEnum } from './entities/pricing-rule.entity';
+import { PricingContextDto, PriceBreakdownDto, CreatePricingRuleDto } from './dto/pricing.dto';
 
 @Injectable()
 export class PricingService {
@@ -296,7 +296,7 @@ export class PricingService {
     return this.getActiveRules();
   }
 
-  async createRule(dto: any): Promise<PricingRuleEntity> {
+  async createRule(dto: CreatePricingRuleDto): Promise<PricingRuleEntity> {
     const entity: PricingRuleEntity = this.pricingRuleRepository
       ? this.pricingRuleRepository.create(dto) as unknown as PricingRuleEntity
       : ({

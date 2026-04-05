@@ -50,11 +50,13 @@ async function bootstrap() {
     maxAge: 3600,
   });
 
+  // Raw body for Stripe webhooks MUST be before global JSON parser
+  // Otherwise the body is consumed before the webhook handler can verify the signature
+  app.use('/payments/webhook', bodyParser.raw({ type: 'application/json' }));
+
   // Body size limits - protection against DoS
   app.use(bodyParser.json({ limit: '1mb' }));
   app.use(bodyParser.urlencoded({ limit: '1mb', extended: true }));
-  // Raw body for Stripe webhooks
-  app.use('/payments/webhook', bodyParser.raw({ type: 'application/json' }));
 
   // Rate limiting - 60 requests per minute per IP
   // Configured via ThrottlerModule.forRoot in AppModule

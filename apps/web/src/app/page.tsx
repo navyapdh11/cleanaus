@@ -8,8 +8,6 @@ import { Flashcard, FlashcardGrid } from '@/components/ui/flashcard';
 import { AnimatedSection } from '@/components/ui/animated-section';
 import { GlassCard } from '@/components/ui/glass-card';
 import { TextReveal, CountUp } from '@/components/ui/micro-interactions';
-import { Header } from '@/components/layout/header';
-import { Footer } from '@/components/layout/footer';
 import {
   Sparkles,
   Shield,
@@ -88,8 +86,6 @@ export default function HomePage() {
           <Scene3D />
         </Canvas>
       </div>
-
-      <Header />
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center px-4 py-20">
@@ -343,8 +339,6 @@ export default function HomePage() {
           </AnimatedSection>
         </div>
       </section>
-
-      <Footer />
     </div>
   );
 }

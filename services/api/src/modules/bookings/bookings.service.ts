@@ -38,7 +38,7 @@ export class BookingsService {
           serviceId: dto.serviceId || null,
           serviceDetails: {},
           status: BookingStatusEnum.PENDING,
-          priority: dto.priority || BookingStatusEnum.PENDING,
+          priority: dto.priority || BookingPriorityEnum.STANDARD,
           scheduledDate: new Date(dto.scheduledDate),
           startTime: dto.startTime,
           endTime: null,

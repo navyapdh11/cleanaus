@@ -7,8 +7,6 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 interface EcommerceAuditProps {
   domain: string;
-  ahrefsKey: string;
-  semrushKey: string;
 }
 
 const ECOMMERCE_KEYWORDS = [
@@ -24,15 +22,15 @@ const ECOMMERCE_KEYWORDS = [
   'cleaning services vic',
 ];
 
-export function EcommerceAudit({ domain, ahrefsKey, semrushKey }: EcommerceAuditProps) {
+export function EcommerceAudit({ domain }: EcommerceAuditProps) {
   const ahrefsEcom = trpc.ahrefs.ecommerceAudit.useQuery(
-    { domain, apiKey: ahrefsKey },
-    { enabled: !!ahrefsKey }
+    { domain },
+    { retry: 1 }
   );
 
   const semrushEcom = trpc.semrush.ecommerceAudit.useQuery(
-    { domain, apiKey: semrushKey },
-    { enabled: !!semrushKey }
+    { domain },
+    { retry: 1 }
   );
 
   if (ahrefsEcom.isLoading || semrushEcom.isLoading) {

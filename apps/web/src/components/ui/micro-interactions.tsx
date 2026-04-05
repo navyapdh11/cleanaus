@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { ReactNode, useState } from 'react';
@@ -144,5 +145,3 @@ export function CountUp({
     </span>
   );
 }
-
-import { useRef, useEffect } from 'react';

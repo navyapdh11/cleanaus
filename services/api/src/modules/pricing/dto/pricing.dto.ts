@@ -1,6 +1,7 @@
-import { IsString, IsNumber, IsOptional, IsObject, IsBoolean, Min } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsObject, IsBoolean, Min, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { PricingRuleTypeEnum } from '../entities/pricing-rule.entity';
 
 export class PricingContextDto {
   @ApiProperty({ example: 'svc-regular-house' })
@@ -92,10 +93,10 @@ export class PriceBreakdownDto {
 
 export class CreatePricingRuleDto {
   @ApiProperty({
-    enum: ['base_rate', 'demand_multiplier', 'seasonal_adjustment', 'loyalty_discount', 'region_surcharge', 'urgent_booking_fee', 'bundle_discount', 'custom_tier_pricing'],
+    enum: PricingRuleTypeEnum,
   })
-  @IsString()
-  type: string;
+  @IsEnum(PricingRuleTypeEnum)
+  type: PricingRuleTypeEnum;
 
   @ApiProperty({ example: 'Weekend surcharge' })
   @IsString()

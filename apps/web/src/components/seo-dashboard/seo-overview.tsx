@@ -1,25 +1,23 @@
 'use client';
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { trpc } from '@/lib/trpc/client';
 import { SEOErrorBoundary } from './error-boundary';
 import { Loader2, TrendingUp, TrendingDown, Link, Search } from 'lucide-react';
 
 interface SEOOverviewProps {
   domain: string;
-  ahrefsKey: string;
-  semrushKey: string;
 }
 
-export function SEOOverview({ domain, ahrefsKey, semrushKey }: SEOOverviewProps) {
+export function SEOOverview({ domain }: SEOOverviewProps) {
   const ahrefsOverview = trpc.ahrefs.overview.useQuery(
-    { domain, apiKey: ahrefsKey },
-    { enabled: !!ahrefsKey }
+    { domain },
+    { retry: 1 }
   );
 
   const semrushOverview = trpc.semrush.overview.useQuery(
-    { domain, apiKey: semrushKey },
-    { enabled: !!semrushKey }
+    { domain },
+    { retry: 1 }
   );
 
   if (ahrefsOverview.isLoading || semrushOverview.isLoading) {
@@ -116,8 +114,9 @@ export function SEOOverview({ domain, ahrefsKey, semrushKey }: SEOOverviewProps)
       {(!ahrefsOverview.data?.success || !semrushOverview.data?.success) && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4">
           <p className="text-sm text-red-700">
-            {!ahrefsOverview.data?.success && ahrefsOverview.data?.error}
-            {!semrushOverview.data?.success && semrushOverview.data?.error}
+            {!ahrefsOverview.data?.success && `Ahrefs: ${ahrefsOverview.data?.error || 'Unknown error'}`}
+            {!ahrefsOverview.data?.success && !semrushOverview.data?.success && ' | '}
+            {!semrushOverview.data?.success && `SEMrush: ${semrushOverview.data?.error || 'Unknown error'}`}
           </p>
         </div>
       )}

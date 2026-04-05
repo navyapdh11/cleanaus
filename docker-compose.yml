@@ -1,18 +1,17 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_DB: cleanaus_prod
       POSTGRES_USER: cleanaus
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-cleanaus_password}
+      POSTGRES_PASSWORD: ${DB_PASSWORD?DB_PASSWORD is required}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U cleanaus"]
       interval: 10s
@@ -22,13 +21,14 @@ services:
   # Redis Cache & Message Queue
   redis:
     image: redis:7-alpine
-    command: redis-server --requirepass ${REDIS_PASSWORD:-redis_password}
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD?REDIS_PASSWORD is required}
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -38,21 +38,27 @@ services:
     build:
       context: ./services/api
       dockerfile: Dockerfile
+    restart: unless-stopped
     ports:
-      - "3001:3001"
+      - "127.0.0.1:3001:3001"
     environment:
-      NODE_ENV: production
+      NODE_ENV: ${NODE_ENV:-development}
       PORT: 3001
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USERNAME: cleanaus
-      DB_PASSWORD: ${DB_PASSWORD:-cleanaus_password}
+      DB_PASSWORD: ${DB_PASSWORD?DB_PASSWORD is required}
       DB_NAME: cleanaus_prod
+      DB_SSL: ${DB_SSL:-false}
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
-      JWT_SECRET: ${JWT_SECRET:-change_this_in_production}
+      REDIS_PASSWORD: ${REDIS_PASSWORD?REDIS_PASSWORD is required}
+      JWT_SECRET: ${JWT_SECRET?JWT_SECRET is required}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET?JWT_REFRESH_SECRET is required}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
       OTEL_ENABLED: "false"
     depends_on:
       postgres:
@@ -70,8 +76,9 @@ services:
     build:
       context: ./apps/web
       dockerfile: Dockerfile
+    restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:3001/v1
       NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
@@ -81,11 +88,12 @@ services:
   # OpenTelemetry Collector (optional)
   otel-collector:
     image: otel/opentelemetry-collector:0.90.0
+    restart: unless-stopped
     ports:
-      - "4318:4318"
-      - "8888:8888"
+      - "127.0.0.1:4318:4318"
+      - "127.0.0.1:8888:8888"
     volumes:
-      - ./docker/otel/otel-config.yaml:/etc/otel/config.yaml
+      - ./docker/otel/otel-config.yaml:/etc/otel/config.yaml:ro
     command: ["--config", "/etc/otel/config.yaml"]
     profiles:
       - monitoring

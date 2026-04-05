@@ -1,4 +1,4 @@
-import { IsString, IsEnum, IsNumber, IsOptional, IsDateString, IsObject, Min, ValidateNested } from 'class-validator';
+import { IsString, IsEnum, IsNumber, IsBoolean, IsOptional, IsDateString, IsObject, Min, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { BookingPriorityEnum } from '../entities/booking.entity';
@@ -23,7 +23,7 @@ export class PropertyDetailsDto {
 
   @ApiPropertyOptional({ example: true })
   @IsOptional()
-  @IsNumber()
+  @IsBoolean()
   hasPets?: boolean;
 }
 

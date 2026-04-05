@@ -16,7 +16,6 @@ import { Loader2, ChevronUp, ChevronDown } from 'lucide-react';
 
 interface KeywordTableProps {
   domain: string;
-  ahrefsKey: string;
 }
 
 interface KeywordRow {
@@ -30,12 +29,12 @@ interface KeywordRow {
 
 const columnHelper = createColumnHelper<KeywordRow>();
 
-export function KeywordTable({ domain, ahrefsKey }: KeywordTableProps) {
+export function KeywordTable({ domain }: KeywordTableProps) {
   const [sorting, setSorting] = useState<SortingState>([{ id: 'position', desc: false }]);
 
   const { data, isLoading, error } = trpc.ahrefs.organicKeywords.useQuery(
-    { domain, apiKey: ahrefsKey },
-    { enabled: !!ahrefsKey }
+    { domain },
+    { retry: 1 }
   );
 
   const columns = [

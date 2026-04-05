@@ -3,11 +3,6 @@
   "version": "1.0.0",
   "description": "Enterprise-grade cleaning services platform for Australia",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*",
-    "services/*"
-  ],
   "scripts": {
     "dev": "pnpm --recursive --parallel dev",
     "build": "pnpm --recursive build",
