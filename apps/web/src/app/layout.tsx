@@ -5,12 +5,12 @@ import { Providers } from '@/components/providers';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 
-const inter = Inter({ 
+const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
 });
 
-const poppins = Poppins({ 
+const poppins = Poppins({
   weight: ['400', '500', '600', '700'],
   subsets: ['latin'],
   variable: '--font-poppins',
@@ -62,8 +62,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en-AU" suppressHydrationWarning>
-      <body className={`${inter.variable} ${poppins.variable} font-sans antialiased`}>
+    <html lang="en-AU" suppressHydrationWarning className={`${inter.variable} ${poppins.variable}`}>
+      <body className="font-sans antialiased bg-bg text-white overflow-x-hidden">
         <Providers>
           <div className="flex min-h-screen flex-col">
             <Header />

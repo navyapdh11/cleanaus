@@ -27,8 +27,6 @@ export function BentoItem({
   const isInView = useInView(ref, { once: true, margin: '-50px' });
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-
-  // Smooth spring rotation for 3D tilt effect
   const rotateX = useSpring(0, { stiffness: 150, damping: 15, mass: 0.5 });
   const rotateY = useSpring(0, { stiffness: 150, damping: 15, mass: 0.5 });
 
@@ -42,22 +40,16 @@ export function BentoItem({
     const y = e.clientY - rect.top;
     mouseX.set(x);
     mouseY.set(y);
-
     if (tilt) {
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
-      rotateX.set(((y - centerY) / centerY) * -6);
-      rotateY.set(((x - centerX) / centerX) * 6);
+      rotateX.set(((y - rect.height / 2) / (rect.height / 2)) * -5);
+      rotateY.set(((x - rect.width / 2) / (rect.width / 2)) * 5);
     }
   }, [tilt, mouseX, mouseY, rotateX, rotateY]);
 
   const handleMouseLeave = useCallback(() => {
     mouseX.set(0);
     mouseY.set(0);
-    if (tilt) {
-      rotateX.set(0);
-      rotateY.set(0);
-    }
+    if (tilt) { rotateX.set(0); rotateY.set(0); }
   }, [tilt, mouseX, mouseY, rotateX, rotateY]);
 
   return (
@@ -76,29 +68,15 @@ export function BentoItem({
         className
       )}
     >
-      {/* Mouse-following glow */}
       {glow && (
         <motion.div
           className="pointer-events-none absolute -inset-px rounded-3xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
           style={{
-            background: useMotionTemplate`
-              radial-gradient(
-                500px circle at ${mouseX}px ${mouseY}px,
-                rgba(99, 102, 241, 0.15),
-                transparent 60%
-              )
-            `,
+            background: useMotionTemplate`radial-gradient(500px circle at ${mouseX}px ${mouseY}px, rgba(99,102,241,0.15), transparent 60%)`,
           }}
         />
       )}
-
-      {/* Subtle gradient overlay */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent" />
-
-      {/* Animated border gradient on hover */}
-      <div className="pointer-events-none absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-cyan-500/20 blur-xl" />
-
-      {/* Content */}
       <div className="relative z-10">{children}</div>
     </motion.div>
   );
@@ -117,15 +95,5 @@ export function BentoGrid({ children, className, columns = 3 }: BentoGridProps) 
     4: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
   };
 
-  return (
-    <div
-      className={cn(
-        'grid gap-4',
-        colMap[columns],
-        className
-      )}
-    >
-      {children}
-    </div>
-  );
+  return <div className={cn('grid gap-4', colMap[columns], className)}>{children}</div>;
 }
