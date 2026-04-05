@@ -24,9 +24,9 @@ export function GlassCard({
   };
 
   const bgMap = {
-    light: 'bg-white/5 dark:bg-white/5',
-    medium: 'bg-white/10 dark:bg-white/5',
-    strong: 'bg-white/15 dark:bg-white/10',
+    light: 'bg-white/5',
+    medium: 'bg-white/10',
+    strong: 'bg-white/15',
   };
 
   return (
@@ -36,8 +36,8 @@ export function GlassCard({
         'relative overflow-hidden rounded-2xl',
         bgMap[intensity],
         blurMap[intensity],
-        border && 'border border-white/20 dark:border-white/10',
-        hover && 'transition-all duration-500 hover:bg-white/15 dark:hover:bg-white/10 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1',
+        border && 'border border-white/20',
+        hover && 'transition-all duration-500 hover:bg-white/15 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1',
         onClick && 'cursor-pointer',
         className
       )}

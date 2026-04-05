@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useRef, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 interface FlashcardProps {
@@ -25,21 +25,21 @@ export function Flashcard({
   const [isHovered, setIsHovered] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleInteraction = () => {
+  const handleInteraction = useCallback(() => {
     setIsFlipped((prev) => !prev);
     onClick?.();
-  };
+  }, [onClick]);
 
-  const handleMouseEnter = () => {
+  const handleMouseEnter = useCallback(() => {
     setIsHovered(true);
     if (autoFlip) {
       timeoutRef.current = setTimeout(() => {
         setIsFlipped(true);
       }, 600);
     }
-  };
+  }, [autoFlip]);
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = useCallback(() => {
     setIsHovered(false);
     if (autoFlip && timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -47,7 +47,7 @@ export function Flashcard({
     if (autoFlip) {
       setIsFlipped(false);
     }
-  };
+  }, [autoFlip]);
 
   return (
     <motion.div
@@ -77,7 +77,7 @@ export function Flashcard({
         >
           {/* Gradient overlay */}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5" />
-          
+
           {/* Subtle animated border */}
           <div className="absolute inset-0 rounded-3xl p-[1px] bg-gradient-to-br from-white/10 via-transparent to-white/5 -z-10" />
 

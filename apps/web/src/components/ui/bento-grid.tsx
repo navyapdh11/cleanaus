@@ -1,7 +1,7 @@
 'use client';
 
-import { useRef, ReactNode } from 'react';
-import { motion, useInView, useMotionValue, useMotionTemplate } from 'framer-motion';
+import { useRef, ReactNode, useCallback } from 'react';
+import { motion, useInView, useMotionValue, useMotionTemplate, useSpring } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 interface BentoItemProps {
@@ -11,30 +11,54 @@ interface BentoItemProps {
   rowSpan?: 1 | 2;
   delay?: number;
   glow?: boolean;
-  onMouseMove?: (e: React.MouseEvent) => void;
+  tilt?: boolean;
 }
 
-function BentoItem({
+export function BentoItem({
   children,
   className,
   colSpan = 1,
   rowSpan = 1,
   delay = 0,
   glow = true,
+  tilt = true,
 }: BentoItemProps) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: '-50px' });
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
+  // Smooth spring rotation for 3D tilt effect
+  const rotateX = useSpring(0, { stiffness: 150, damping: 15, mass: 0.5 });
+  const rotateY = useSpring(0, { stiffness: 150, damping: 15, mass: 0.5 });
+
   const colMap = { 1: 'col-span-1', 2: 'col-span-2', 3: 'col-span-3' };
   const rowMap = { 1: 'row-span-1', 2: 'row-span-2' };
 
-  function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!ref.current) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    mouseX.set(e.clientX - rect.left);
-    mouseY.set(e.clientY - rect.top);
-  }
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    mouseX.set(x);
+    mouseY.set(y);
+
+    if (tilt) {
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      rotateX.set(((y - centerY) / centerY) * -6);
+      rotateY.set(((x - centerX) / centerX) * 6);
+    }
+  }, [tilt, mouseX, mouseY, rotateX, rotateY]);
+
+  const handleMouseLeave = useCallback(() => {
+    mouseX.set(0);
+    mouseY.set(0);
+    if (tilt) {
+      rotateX.set(0);
+      rotateY.set(0);
+    }
+  }, [tilt, mouseX, mouseY, rotateX, rotateY]);
 
   return (
     <motion.div
@@ -43,6 +67,8 @@ function BentoItem({
       animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
       transition={{ duration: 0.6, delay, ease: [0.25, 0.1, 0.25, 1] }}
       onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={tilt ? { transformPerspective: 1000, rotateX, rotateY } : undefined}
       className={cn(
         'group relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6',
         colMap[colSpan],
@@ -57,9 +83,9 @@ function BentoItem({
           style={{
             background: useMotionTemplate`
               radial-gradient(
-                400px circle at ${mouseX}px ${mouseY}px,
-                rgba(99, 102, 241, 0.12),
-                transparent 80%
+                500px circle at ${mouseX}px ${mouseY}px,
+                rgba(99, 102, 241, 0.15),
+                transparent 60%
               )
             `,
           }}
@@ -68,6 +94,9 @@ function BentoItem({
 
       {/* Subtle gradient overlay */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent" />
+
+      {/* Animated border gradient on hover */}
+      <div className="pointer-events-none absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-cyan-500/20 blur-xl" />
 
       {/* Content */}
       <div className="relative z-10">{children}</div>
@@ -100,5 +129,3 @@ export function BentoGrid({ children, className, columns = 3 }: BentoGridProps) 
     </div>
   );
 }
-
-export { BentoItem };

@@ -23,6 +23,12 @@ import {
   Award,
   Users,
   MapPin,
+  Phone,
+  Mail,
+  Heart,
+  Gem,
+  TrendingUp,
+  HeadphonesIcon,
 } from 'lucide-react';
 
 const services = [
@@ -78,10 +84,10 @@ export default function HomePage() {
   return (
     <div className="relative min-h-screen bg-[#0a0f1a] text-white overflow-hidden">
       {/* Animated Background */}
-      <AnimatedBackground variant="gradient" speed={0.8} />
+      <AnimatedBackground variant="aurora" speed={0.6} />
 
       {/* 3D Scene overlay */}
-      <div className="fixed inset-0 -z-5 pointer-events-none opacity-30">
+      <div className="fixed inset-0 -z-5 pointer-events-none opacity-20">
         <Canvas camera={{ position: [0, 0, 8], fov: 50 }}>
           <Scene3D />
         </Canvas>
@@ -167,8 +173,8 @@ export default function HomePage() {
         <div className="container mx-auto max-w-7xl">
           <AnimatedSection>
             <BentoGrid columns={4}>
-              {stats.map((stat, i) => (
-                <BentoItem key={i} className="text-center">
+              {stats.map((stat) => (
+                <BentoItem key={stat.label} className="text-center">
                   <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                     <CountUp
                       end={stat.value}
@@ -200,11 +206,11 @@ export default function HomePage() {
           </AnimatedSection>
 
           <BentoGrid columns={3}>
-            {services.map((service, i) => (
+            {services.map((service) => (
               <BentoItem
-                key={i}
+                key={service.title}
                 colSpan={service.span}
-                delay={i * 0.15}
+                delay={0.15}
               >
                 <div className={`absolute inset-0 bg-gradient-to-br ${service.color} opacity-50`} />
                 <div className="relative z-10 space-y-4">
@@ -247,8 +253,8 @@ export default function HomePage() {
           </AnimatedSection>
 
           <FlashcardGrid
-            cards={features.map((feature, i) => ({
-              id: `feature-${i}`,
+            cards={features.map((feature) => ({
+              id: feature.title,
               front: (
                 <div className="flex flex-col items-center justify-center text-center h-full gap-4">
                   <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20">
@@ -297,8 +303,8 @@ export default function HomePage() {
               { step: '02', title: 'Get Matched', desc: 'AI assigns your perfect cleaning team' },
               { step: '03', title: 'We Clean', desc: 'Professional service, guaranteed quality' },
               { step: '04', title: 'Relax', desc: 'Enjoy your spotless space' },
-            ].map((item, i) => (
-              <AnimatedSection key={i} delay={i * 0.15}>
+            ].map((item) => (
+              <AnimatedSection key={item.step} delay={parseInt(item.step) * 0.15}>
                 <GlassCard className="relative text-center">
                   <div className="text-6xl font-black bg-gradient-to-br from-blue-400/20 to-purple-400/20 bg-clip-text text-transparent">
                     {item.step}
