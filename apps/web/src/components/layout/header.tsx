@@ -6,11 +6,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Phone, Menu, X } from 'lucide-react';
 
 const navLinks = [
-  { label: 'Services', href: '/#services' },
+  { label: 'Services', href: '/services' },
   { label: 'Gallery', href: '/gallery' },
-  { label: 'Pricing', href: '/#pricing' },
-  { label: 'About', href: '/#about' },
-  { label: 'Contact', href: '/#contact' },
+  { label: 'AR Scanner', href: '/ar-scanner' },
+  { label: 'Strata Leads', href: '/strata-leads' },
+  { label: 'About', href: '/about' },
+  { label: 'Contact', href: '/contact' },
 ];
 
 export function Header() {

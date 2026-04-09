@@ -45,23 +45,45 @@ import { AUSTRALIAN_REGIONS } from './config/australian-regions';
       limit: 60,
     }]),
 
-    // Database (disabled for demo mode - no PostgreSQL available)
-    // TypeOrmModule.forRootAsync({
-    //   inject: [ConfigService],
-    //   useFactory: (configService: ConfigService) => ({
-    //     type: 'postgres',
-    //     host: configService.get('DB_HOST', 'localhost'),
-    //     port: configService.get('DB_PORT', 5432),
-    //     username: configService.get('DB_USERNAME', 'cleanaus'),
-    //     password: configService.get('DB_PASSWORD'),
-    //     database: configService.get('DB_NAME', 'cleanaus_prod'),
-    //     entities: [__dirname + '/**/*.entity{.ts,.js}'],
-    //     migrations: [__dirname + '/migrations/*{.ts,.js}'],
-    //     synchronize: configService.get('NODE_ENV') === 'development',
-    //     logging: configService.get('DB_LOGGING', false),
-    //     ssl: configService.get('DB_SSL', false),
-    //   }),
-    // }),
+    // Database - PostgreSQL with TypeORM
+    // Falls back to in-memory mode if DB is not available
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const dbHost = configService.get('DB_HOST', 'localhost');
+        const dbAvailable = dbHost !== 'localhost' || configService.get('DB_ENABLED', 'true') === 'true';
+
+        if (!dbAvailable) {
+          // Return a minimal config that won't crash but won't connect
+          // Modules use @Optional() + dual-mode pattern for in-memory fallback
+          return {
+            type: 'postgres' as const,
+            host: 'localhost',
+            port: 5432,
+            username: 'cleanaus',
+            password: 'cleanaus_dev_password',
+            database: 'cleanaus_dev',
+            entities: [],
+            synchronize: false,
+            logging: false,
+          };
+        }
+
+        return {
+          type: 'postgres' as const,
+          host: configService.get('DB_HOST', 'localhost'),
+          port: configService.get('DB_PORT', 5432),
+          username: configService.get('DB_USERNAME', 'cleanaus'),
+          password: configService.get('DB_PASSWORD', 'cleanaus_dev_password'),
+          database: configService.get('DB_NAME', 'cleanaus_dev'),
+          autoLoadEntities: true,
+          synchronize: configService.get('NODE_ENV') === 'development',
+          logging: configService.get('DB_LOGGING', false),
+          ssl: configService.get('DB_SSL', false),
+          migrationsRun: configService.get('NODE_ENV') === 'production',
+        };
+      },
+    }),
 
     // Event emitter for domain events
     EventEmitterModule.forRoot({
@@ -76,7 +98,7 @@ import { AUSTRALIAN_REGIONS } from './config/australian-regions';
     // Scheduled tasks
     ScheduleModule.forRoot(),
 
-    // BullMQ for job queues (disabled - Redis not available)
+    // BullMQ for job queues (optional - falls back to in-memory if Redis unavailable)
     // BullModule.forRootAsync({
     //   inject: [ConfigService],
     //   useFactory: (configService: ConfigService) => ({

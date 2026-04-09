@@ -26,23 +26,23 @@ export default function SEODashboardPage() {
   const isConfigured = true;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-bg">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">SEO Dashboard</h1>
-          <p className="mt-2 text-gray-600">
+          <h1 className="text-3xl font-bold text-white">SEO Dashboard</h1>
+          <p className="mt-2 text-white/60">
             Ahrefs & SEMrush integration for CleanAUS SEO analysis
           </p>
         </div>
 
         {/* Domain Selector */}
         <div className="mb-6 flex items-center gap-4">
-          <label className="text-sm font-medium text-gray-700">Domain:</label>
+          <label className="text-sm font-medium text-white/70">Domain:</label>
           <select
             value={selectedDomain}
             onChange={(e) => setSelectedDomain(e.target.value)}
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white"
           >
             {AUSTRALIAN_DOMAINS.map((d) => (
               <option key={d} value={d}>{d}</option>
