@@ -1,7 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { HealthCheck, HealthCheckService, MemoryHealthIndicator, DiskHealthIndicator } from '@nestjs/terminus';
 
-@Controller('health')
+@Controller()
 export class HealthController {
   constructor(
     private health: HealthCheckService,
@@ -10,6 +10,19 @@ export class HealthController {
   ) {}
 
   @Get()
+  info() {
+    return {
+      name: 'CleanAUS Enterprise API',
+      version: '1.0.0',
+      environment: process.env.NODE_ENV || 'development',
+      status: 'running',
+      documentation: '/api/docs',
+      health: '/health',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Get('health')
   @HealthCheck()
   check() {
     return this.health.check([
