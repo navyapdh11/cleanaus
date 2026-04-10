@@ -47,7 +47,6 @@ export function ImageEditor({
   const [hasChanges, setHasChanges] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
-  const [imageLoaded, setImageLoaded] = useState(false);
 
   const rotate = useCallback((degrees: number) => {
     setTransform((prev) => ({
@@ -274,13 +273,13 @@ export function ImageEditor({
         {/* Canvas area */}
         <div className="relative flex-1 overflow-hidden bg-gray-100 dark:bg-gray-800">
           <div className="flex h-full items-center justify-center p-8">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               ref={imageRef}
               src={imageUrl}
               alt="Editing"
               style={transformStyle}
               className="max-h-full max-w-full object-contain"
-              onLoad={() => setImageLoaded(true)}
               crossOrigin="anonymous"
             />
           </div>

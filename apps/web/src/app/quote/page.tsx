@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { AnimatedSection } from '@/components/ui/animated-section';
 import { GlassCard } from '@/components/ui/glass-card';
 import { AnimatedBackground } from '@/components/ui/animated-background';
@@ -388,12 +389,12 @@ export default function QuotePage() {
                 <p className="text-white/60 mb-8">
                   Thank you, {formData.firstName}! Our team will review your requirements and send a detailed quote to {formData.email} within 2 hours.
                 </p>
-                <a
+                <Link
                   href="/"
                   className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 px-8 py-4 font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-blue-500/40 hover:-translate-y-0.5"
                 >
                   Back to Home
-                </a>
+                </Link>
               </AnimatedSection>
             )}
           </GlassCard>

@@ -403,6 +403,7 @@ export function PhotoGallery({
             className="relative max-h-[85vh] max-w-[90vw]"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={filteredPhotos[lightboxIndex].url}
               alt={

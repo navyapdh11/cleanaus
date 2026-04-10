@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { AnimatedSection } from '@/components/ui/animated-section';
 import { GlassCard } from '@/components/ui/glass-card';
 import { AnimatedBackground } from '@/components/ui/animated-background';
@@ -445,12 +446,12 @@ export default function BookPage() {
                     Thank you, {formData.firstName}! We&apos;ve sent a confirmation email to {formData.email}.
                     Our AI is now matching you with the perfect cleaning team.
                   </p>
-                  <a
+                  <Link
                     href="/"
                     className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 px-8 py-4 font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-blue-500/40 hover:-translate-y-0.5"
                   >
                     Back to Home
-                  </a>
+                  </Link>
                 </AnimatedSection>
               )}
 

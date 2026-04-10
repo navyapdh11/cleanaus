@@ -78,18 +78,21 @@ export function LazyImage({
       )}
 
       {isIntersecting && !hasError && (
-        <img
-          ref={imageRef}
-          src={isLoaded ? src : thumbnailSrc || src}
-          alt={alt}
-          className={cn(
-            'h-full w-full object-cover transition-opacity duration-300',
-            isLoaded ? 'opacity-100' : 'opacity-0'
-          )}
-          onLoad={handleLoad}
-          onError={handleError}
-          loading="lazy"
-        />
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            ref={imageRef}
+            src={isLoaded ? src : thumbnailSrc || src}
+            alt={alt}
+            className={cn(
+              'h-full w-full object-cover transition-opacity duration-300',
+              isLoaded ? 'opacity-100' : 'opacity-0'
+            )}
+            onLoad={handleLoad}
+            onError={handleError}
+            loading="lazy"
+          />
+        </>
       )}
 
       {hasError && (

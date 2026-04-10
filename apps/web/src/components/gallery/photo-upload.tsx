@@ -31,14 +31,13 @@ interface PhotoUploadProps {
 }
 
 export function PhotoUpload({
-  onUploadComplete,
+  onUploadComplete: _onUploadComplete,
   category = 'general',
   className,
   maxFiles = 10,
   maxSizeMB = 10,
 }: PhotoUploadProps) {
   const [uploads, setUploads] = useState<Map<string, UploadProgress>>(new Map());
-  const [isDragging, setIsDragging] = useState(false);
   const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
   const xhrRefsRef = useRef<Map<string, XMLHttpRequest>>(new Map());
 
