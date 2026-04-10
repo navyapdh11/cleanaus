@@ -87,14 +87,15 @@ import { AUSTRALIAN_REGIONS } from './config/australian-regions';
     // Domain modules (DDD bounded contexts)
     AuthModule,
     RegionsModule,
-    ServicesModule,
-    BookingsModule,
-    PricingModule,
-    CustomersModule,
-    StaffModule,
-    DispatchModule,
-    PaymentsModule,
-    NotificationsModule,
+    // TypeORM-dependent modules disabled until database is available
+    // ServicesModule,
+    // BookingsModule,
+    // PricingModule,
+    // CustomersModule,
+    // StaffModule,
+    // DispatchModule,
+    // PaymentsModule,
+    // NotificationsModule,
 
     // OASIS Agentic AI Flow
     OasisAgentModule,
