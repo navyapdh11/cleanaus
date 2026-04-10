@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
+// TypeORM disabled until database is available
+// import { TypeOrmModule } from '@nestjs/typeorm';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { BullModule } from '@nestjs/bullmq';
@@ -45,46 +46,8 @@ import { AUSTRALIAN_REGIONS } from './config/australian-regions';
       limit: 60,
     }]),
 
-    // Database - PostgreSQL with TypeORM
-    // Falls back to in-memory mode if DB is not available
-    TypeOrmModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        const dbHost = configService.get<string>('DB_HOST', 'localhost');
-        const dbEnabled = configService.get<string>('DB_ENABLED', 'true') === 'true';
-        const dbAvailable = dbHost !== 'localhost' || dbEnabled;
-
-        if (!dbAvailable) {
-          // Return a minimal config that won't crash but won't connect
-          // Modules use @Optional() + dual-mode pattern for in-memory fallback
-          return {
-            type: 'postgres' as const,
-            host: 'localhost',
-            port: 5432,
-            username: 'cleanaus',
-            password: 'cleanaus_dev_password',
-            database: 'cleanaus_dev',
-            entities: [],
-            synchronize: false,
-            logging: false,
-          };
-        }
-
-        return {
-          type: 'postgres' as const,
-          host: configService.get<string>('DB_HOST', 'localhost'),
-          port: configService.get<number>('DB_PORT', 5432),
-          username: configService.get<string>('DB_USERNAME', 'cleanaus'),
-          password: configService.get<string>('DB_PASSWORD', 'cleanaus_dev_password'),
-          database: configService.get<string>('DB_NAME', 'cleanaus_dev'),
-          autoLoadEntities: true,
-          synchronize: configService.get<string>('NODE_ENV') === 'development',
-          logging: configService.get<boolean>('DB_LOGGING', false),
-          ssl: configService.get<boolean>('DB_SSL', false),
-          migrationsRun: configService.get<string>('NODE_ENV') === 'production',
-        };
-      },
-    }),
+    // Database - PostgreSQL with TypeORM (DISABLED - DB_ENABLED=false)
+    // TypeORM disabled until database is available
 
     // Event emitter for domain events
     EventEmitterModule.forRoot({
