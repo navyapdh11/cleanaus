@@ -26,7 +26,7 @@ describe('NotificationsService', () => {
       const notification = await service.send({
         customerId: 'cust-001',
         channel: NotificationChannelEnum.EMAIL,
-        type: NotificationTypeEnum.GENERAL,
+        type: NotificationTypeEnum.SYSTEM_ALERT,
         subject: 'Test Notification',
         body: 'This is a test',
       });
@@ -138,7 +138,7 @@ describe('NotificationsService', () => {
       await service.send({
         customerId: 'cust-001',
         channel: NotificationChannelEnum.EMAIL,
-        type: NotificationTypeEnum.GENERAL,
+        type: NotificationTypeEnum.SYSTEM_ALERT,
         subject: 'Test 1',
         body: 'Body 1',
       });
@@ -161,7 +161,7 @@ describe('NotificationsService', () => {
       await service.send({
         customerId: 'cust-specific',
         channel: NotificationChannelEnum.EMAIL,
-        type: NotificationTypeEnum.GENERAL,
+        type: NotificationTypeEnum.SYSTEM_ALERT,
         subject: 'Test',
         body: 'Body',
       });
@@ -201,7 +201,7 @@ describe('NotificationsService', () => {
       await service.send({
         customerId: 'cust-001',
         channel: NotificationChannelEnum.EMAIL,
-        type: NotificationTypeEnum.GENERAL,
+        type: NotificationTypeEnum.SYSTEM_ALERT,
         subject: 'Test',
         body: 'Body',
       });
@@ -221,7 +221,7 @@ describe('NotificationsService', () => {
       const notification = await service.send({
         customerId: 'cust-001',
         channel: NotificationChannelEnum.EMAIL,
-        type: NotificationTypeEnum.GENERAL,
+        type: NotificationTypeEnum.SYSTEM_ALERT,
         subject: 'Test',
         body: 'Body',
       });
@@ -238,7 +238,7 @@ describe('NotificationsService', () => {
       const notification = await service.send({
         customerId: 'cust-001',
         channel: NotificationChannelEnum.EMAIL,
-        type: NotificationTypeEnum.GENERAL,
+        type: NotificationTypeEnum.SYSTEM_ALERT,
         subject: 'Test',
         body: 'Body',
       });

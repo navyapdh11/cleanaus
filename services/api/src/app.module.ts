@@ -50,8 +50,9 @@ import { AUSTRALIAN_REGIONS } from './config/australian-regions';
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        const dbHost = configService.get('DB_HOST', 'localhost');
-        const dbAvailable = dbHost !== 'localhost' || configService.get('DB_ENABLED', 'true') === 'true';
+        const dbHost = configService.get<string>('DB_HOST', 'localhost');
+        const dbEnabled = configService.get<string>('DB_ENABLED', 'true') === 'true';
+        const dbAvailable = dbHost !== 'localhost' || dbEnabled;
 
         if (!dbAvailable) {
           // Return a minimal config that won't crash but won't connect
@@ -71,16 +72,16 @@ import { AUSTRALIAN_REGIONS } from './config/australian-regions';
 
         return {
           type: 'postgres' as const,
-          host: configService.get('DB_HOST', 'localhost'),
-          port: configService.get('DB_PORT', 5432),
-          username: configService.get('DB_USERNAME', 'cleanaus'),
-          password: configService.get('DB_PASSWORD', 'cleanaus_dev_password'),
-          database: configService.get('DB_NAME', 'cleanaus_dev'),
+          host: configService.get<string>('DB_HOST', 'localhost'),
+          port: configService.get<number>('DB_PORT', 5432),
+          username: configService.get<string>('DB_USERNAME', 'cleanaus'),
+          password: configService.get<string>('DB_PASSWORD', 'cleanaus_dev_password'),
+          database: configService.get<string>('DB_NAME', 'cleanaus_dev'),
           autoLoadEntities: true,
-          synchronize: configService.get('NODE_ENV') === 'development',
-          logging: configService.get('DB_LOGGING', false),
-          ssl: configService.get('DB_SSL', false),
-          migrationsRun: configService.get('NODE_ENV') === 'production',
+          synchronize: configService.get<string>('NODE_ENV') === 'development',
+          logging: configService.get<boolean>('DB_LOGGING', false),
+          ssl: configService.get<boolean>('DB_SSL', false),
+          migrationsRun: configService.get<string>('NODE_ENV') === 'production',
         };
       },
     }),

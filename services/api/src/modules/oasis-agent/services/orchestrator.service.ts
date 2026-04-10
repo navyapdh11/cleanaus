@@ -1,20 +1,11 @@
 import { Injectable, OnModuleInit, Optional, Logger } from '@nestjs/common';
-import { InjectQueue } from '@nestjs/bullmq';
+// InjectQueue disabled - BullMQ queues are not available
+// import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { OpenTelemetryService } from '../../../common/services/opentelemetry.service';
 import { AgentRegistryService } from './agent-registry.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-
-// Import queues directly to avoid circular dependency
-export const OasisQueues = {
-  SCHEDULING: 'oasis-scheduling',
-  PRICING: 'oasis-pricing',
-  DISPATCH: 'oasis-dispatch',
-  SUPPORT: 'oasis-support',
-  QUALITY: 'oasis-quality',
-  ORCHESTRATOR: 'oasis-orchestrator',
-} as const;
 
 export interface OasisTask {
   id: string;
@@ -72,7 +63,8 @@ export class OasisOrchestratorService implements OnModuleInit {
   };
 
   constructor(
-    @Optional() @InjectQueue(OasisQueues.ORCHESTRATOR)
+    // orchestratorQueue disabled - BullMQ queues are not available
+    // @Optional() @InjectQueue(OasisQueues.ORCHESTRATOR)
     private readonly orchestratorQueue: Queue | undefined,
     private readonly agentRegistry: AgentRegistryService,
     private readonly otel: OpenTelemetryService,
