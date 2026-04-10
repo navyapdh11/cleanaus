@@ -1,0 +1,96 @@
+name: 🚀 Vercel Deployment Trigger
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'apps/web/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        type: choice
+        options:
+          - preview
+          - production
+        default: preview
+      branch:
+        description: 'Branch to deploy'
+        type: string
+        default: main
+
+jobs:
+  trigger-vercel:
+    name: 🌐 Trigger Vercel Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get deployment info
+        id: info
+        run: |
+          echo "branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
+          echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+          echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "actor=${{ github.actor }}" >> $GITHUB_OUTPUT
+          echo "event=${{ github.event_name }}" >> $GITHUB_OUTPUT
+
+      - name: Determine environment
+        id: env
+        run: |
+          if [ "${{ github.event.inputs.environment }}" = "production" ] || \
+             ([ "${{ github.event_name }}" = "push" ] && [ "${{ steps.info.outputs.branch }}" = "main" ]); then
+            echo "env=production" >> $GITHUB_OUTPUT
+            echo "is_prod=true" >> $GITHUB_OUTPUT
+          else
+            echo "env=preview" >> $GITHUB_OUTPUT
+            echo "is_prod=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Trigger Vercel Deployment (Production)
+        if: steps.env.outputs.is_prod == 'true' && secrets.VERCEL_DEPLOY_HOOK_URL != ''
+        run: |
+          echo "🌐 Deploying to PRODUCTION on Vercel..."
+          curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "branch": "${{ steps.info.outputs.branch }}",
+              "sha": "${{ steps.info.outputs.sha }}",
+              "actor": "${{ steps.info.outputs.actor }}",
+              "environment": "production"
+            }'
+          echo "✅ Production deployment triggered on Vercel"
+
+      - name: Trigger Vercel Deployment (Preview)
+        if: steps.env.outputs.is_prod == 'false' && secrets.VERCEL_PREVIEW_HOOK_URL != ''
+        run: |
+          echo "🔍 Deploying PREVIEW on Vercel..."
+          curl -X POST "${{ secrets.VERCEL_PREVIEW_HOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "branch": "${{ steps.info.outputs.branch }}",
+              "sha": "${{ steps.info.outputs.sha }}",
+              "actor": "${{ steps.info.outputs.actor }}",
+              "environment": "preview"
+            }'
+          echo "✅ Preview deployment triggered on Vercel"
+
+      - name: Deployment summary
+        run: |
+          echo "## 🚀 Vercel Deployment Triggered" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Detail | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Environment** | ${{ steps.env.outputs.env }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Branch** | ${{ steps.info.outputs.branch }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Commit** | ${{ steps.info.outputs.short_sha }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Triggered by** | @${{ steps.info.outputs.actor }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Event** | ${{ steps.info.outputs.event }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📊 [View on Vercel](https://vercel.com/cleanaus/cleanaus)" >> $GITHUB_STEP_SUMMARY

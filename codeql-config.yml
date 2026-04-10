@@ -1,0 +1,39 @@
+# CodeQL Configuration for CleanAUS Enterprise Platform
+# https://docs.github.com/en/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning/customizing-your-advanced-setup-for-code-scanning
+
+name: "CleanAUS CodeQL Config"
+
+disable-default-queries: false
+
+queries:
+  - uses: security-and-quality
+  - uses: security-extended
+
+paths:
+  - services/api/src
+  - apps/web/src
+  - apps/web/src/app
+  - apps/web/src/components
+  - apps/web/src/lib
+
+paths-ignore:
+  - node_modules
+  - dist
+  - build
+  - .next
+  - coverage
+  - test
+  - "**/*.spec.ts"
+  - "**/*.test.ts"
+  - "**/*.d.ts"
+  - "**/node_modules/**"
+
+query-filters:
+  - exclude:
+      id: js/unused-local-variable
+  - exclude:
+      id: js/unused-private-property
+  - include:
+      tags contain: security
+  - include:
+      tags contain: correctness

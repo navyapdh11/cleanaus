@@ -1,0 +1,54 @@
+{
+  "requests": [
+    {
+      "url": "/",
+      "timings": {
+        "budget": 3000
+      }
+    },
+    {
+      "url": "/book",
+      "timings": {
+        "budget": 3000
+      }
+    },
+    {
+      "url": "/services",
+      "timings": {
+        "budget": 3000
+      }
+    }
+  ],
+  "resourceSizes": [
+    {
+      "resourceType": "script",
+      "budget": 350
+    },
+    {
+      "resourceType": "stylesheet",
+      "budget": 100
+    },
+    {
+      "resourceType": "image",
+      "budget": 1000
+    },
+    {
+      "resourceType": "total",
+      "budget": 2000
+    }
+  ],
+  "resourceCounts": [
+    {
+      "resourceType": "script",
+      "budget": 25
+    },
+    {
+      "resourceType": "stylesheet",
+      "budget": 10
+    },
+    {
+      "resourceType": "image",
+      "budget": 50
+    }
+  ]
+}
