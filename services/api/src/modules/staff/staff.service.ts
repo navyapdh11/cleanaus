@@ -160,6 +160,7 @@ export class StaffService implements OnModuleInit {
       : ({
           id: `staff-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           ...dto,
+          status: StaffStatusEnum.ACTIVE,
           skills: dto.skills || [],
           assignedRegions: dto.assignedRegions || [],
           currentDailyBookings: 0,

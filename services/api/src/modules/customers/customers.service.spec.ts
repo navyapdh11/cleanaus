@@ -12,6 +12,7 @@ describe('CustomersService', () => {
     }).compile();
 
     service = module.get<CustomersService>(CustomersService);
+    await service.onModuleInit(); // Trigger seeding
   });
 
   it('should be defined', () => {

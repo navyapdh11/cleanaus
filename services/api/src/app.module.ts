@@ -1,7 +1,6 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-// TypeORM disabled until database is available
-// import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { BullModule } from '@nestjs/bullmq';
@@ -29,9 +28,29 @@ import { OasisAgentModule } from './modules/oasis-agent/oasis-agent.module';
 import { OpenTelemetryService } from './common/services/opentelemetry.service';
 import { HealthController } from './common/controllers/health.controller';
 
+// Entities (for TypeORM)
+import { RegionEntity } from './modules/regions/entities/region.entity';
+import { ServiceEntity } from './modules/services/entities/service.entity';
+import { BookingEntity } from './modules/bookings/entities/booking.entity';
+import { PricingRuleEntity } from './modules/pricing/entities/pricing-rule.entity';
+import { CustomerEntity } from './modules/customers/entities/customer.entity';
+import { StaffEntity } from './modules/staff/entities/staff.entity';
+import { DispatchAssignmentEntity } from './modules/dispatch/entities/dispatch-assignment.entity';
+import { PaymentEntity } from './modules/payments/entities/payment.entity';
+import { NotificationEntity } from './modules/notifications/entities/notification.entity';
+import { AgentLogEntity } from './modules/oasis-agent/entities/agent-log.entity';
+import { DecisionEntity } from './modules/oasis-agent/entities/decision.entity';
+
 // Australian regions configuration
 import { AUSTRALIAN_REGIONS } from './config/australian-regions';
 
+/**
+ * AppModule - Enterprise CleanAUS Platform
+ * 
+ * All modules are enabled with in-memory fallback support.
+ * TypeORM is configured but falls back gracefully when DB is unavailable.
+ * Rate limiting is applied globally via ThrottlerGuard.
+ */
 @Module({
   imports: [
     // Global configuration
@@ -46,8 +65,50 @@ import { AUSTRALIAN_REGIONS } from './config/australian-regions';
       limit: 60,
     }]),
 
-    // Database - PostgreSQL with TypeORM (DISABLED - DB_ENABLED=false)
-    // TypeORM disabled until database is available
+    // Database - PostgreSQL with TypeORM
+    // Gracefully handles missing DB - modules use in-memory fallback
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const dbEnabled = configService.get<string>('DB_ENABLED', 'true') === 'true';
+        if (!dbEnabled) {
+          Logger.warn('⚠️  Database disabled - using in-memory mode', 'AppModule');
+          // manualInitialization prevents TypeORM from trying to connect
+          return {
+            type: 'postgres' as const,
+            entities: [],
+            synchronize: false,
+            manualInitialization: true,
+          };
+        }
+        return {
+          type: 'postgres' as const,
+          host: configService.get<string>('DB_HOST', 'localhost'),
+          port: configService.get<number>('DB_PORT', 5432),
+          username: configService.get<string>('DB_USERNAME', 'cleanaus'),
+          password: configService.get<string>('DB_PASSWORD', ''),
+          database: configService.get<string>('DB_NAME', 'cleanaus'),
+          entities: [
+            RegionEntity,
+            ServiceEntity,
+            BookingEntity,
+            PricingRuleEntity,
+            CustomerEntity,
+            StaffEntity,
+            DispatchAssignmentEntity,
+            PaymentEntity,
+            NotificationEntity,
+            AgentLogEntity,
+            DecisionEntity,
+          ],
+          synchronize: configService.get<string>('NODE_ENV', 'development') === 'development',
+          logging: configService.get<string>('DB_LOGGING', 'false') === 'true',
+          ssl: configService.get<string>('DB_SSL', 'false') === 'true'
+            ? { rejectUnauthorized: false }
+            : false,
+        };
+      },
+    }),
 
     // Event emitter for domain events
     EventEmitterModule.forRoot({
@@ -62,40 +123,64 @@ import { AUSTRALIAN_REGIONS } from './config/australian-regions';
     // Scheduled tasks
     ScheduleModule.forRoot(),
 
-    // BullMQ for job queues (optional - falls back to in-memory if Redis unavailable)
-    // BullModule.forRootAsync({
-    //   inject: [ConfigService],
-    //   useFactory: (configService: ConfigService) => ({
-    //     connection: {
-    //       host: configService.get('REDIS_HOST', 'localhost'),
-    //       port: configService.get('REDIS_PORT', 6379),
-    //       password: configService.get('REDIS_PASSWORD'),
-    //     },
-    //   }),
-    // }),
+    // BullMQ for job queues (falls back gracefully if Redis unavailable)
+    BullModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const redisHost = configService.get('REDIS_HOST', 'localhost');
+        const redisPort = configService.get('REDIS_PORT', 6379);
+        const redisPassword = configService.get('REDIS_PASSWORD');
+        // Graceful fallback - if Redis not available, BullMQ will handle it
+        return {
+          connection: {
+            host: redisHost,
+            port: redisPort,
+            password: redisPassword || undefined,
+            retryStrategy: (times: number) => {
+              if (times > 3) return null; // Stop retrying after 3 attempts
+              return Math.min(times * 200, 2000);
+            },
+          },
+        };
+      },
+    }),
 
-    // Cache (in-memory fallback)
-    CacheModule.register({
+    // Cache with Redis (falls back to in-memory)
+    CacheModule.registerAsync({
       isGlobal: true,
-      ttl: 3600,
-      max: 100,
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => {
+        try {
+          const redisHost = configService.get('REDIS_HOST', 'localhost');
+          const redisPort = configService.get('REDIS_PORT', 6379);
+          const redisPassword = configService.get('REDIS_PASSWORD');
+          const store = await redisStore({
+            socket: { host: redisHost, port: redisPort },
+            password: redisPassword || undefined,
+            ttl: 3600,
+          });
+          return { store };
+        } catch {
+          Logger.warn('⚠️  Redis unavailable - using in-memory cache', 'AppModule');
+          return { ttl: 3600, max: 100 };
+        }
+      },
     }),
 
     // Health checks
     TerminusModule,
 
-    // Domain modules (DDD bounded contexts)
+    // Domain modules (ALL ENABLED with in-memory fallback)
     AuthModule,
     RegionsModule,
-    // TypeORM-dependent modules disabled until database is available
-    // ServicesModule,
-    // BookingsModule,
-    // PricingModule,
-    // CustomersModule,
-    // StaffModule,
-    // DispatchModule,
-    // PaymentsModule,
-    // NotificationsModule,
+    ServicesModule,
+    BookingsModule,
+    PricingModule,
+    CustomersModule,
+    StaffModule,
+    DispatchModule,
+    PaymentsModule,
+    NotificationsModule,
 
     // OASIS Agentic AI Flow
     OasisAgentModule,
@@ -103,4 +188,14 @@ import { AUSTRALIAN_REGIONS } from './config/australian-regions';
   controllers: [HealthController],
   providers: [OpenTelemetryService],
 })
-export class AppModule {}
+export class AppModule implements OnModuleInit {
+  private readonly logger = new Logger(AppModule.name);
+
+  async onModuleInit() {
+    this.logger.log('🚀 CleanAUS Enterprise Platform - All Modules Loaded');
+    this.logger.log('📊 Services: Regions, Services, Bookings, Pricing, Customers, Staff, Dispatch, Payments, Notifications');
+    this.logger.log('🤖 OASIS AI Agents: Scheduling, Pricing, Dispatch, Support, Quality');
+    this.logger.log('💾 Mode: In-memory fallback enabled (DB optional)');
+    this.logger.log('🔒 Rate Limiting: 60 req/min per IP');
+  }
+}

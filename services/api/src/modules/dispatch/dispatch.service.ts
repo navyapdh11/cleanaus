@@ -181,6 +181,9 @@ export class DispatchService {
     }
 
     const best = recommendations[0];
+    if (!best) {
+      throw new BadRequestException('No available staff for this booking');
+    }
 
     return this.assignStaff({
       bookingId,
